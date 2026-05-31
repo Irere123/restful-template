@@ -9,12 +9,17 @@ const configSchema = z.object({
 	NODE_ENV: z
 		.enum(["development", "production", "test"])
 		.default("development"),
+	DOMAIN: z.string().optional(),
 	LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
 	MAX_FILE_SIZE_MB: z.coerce.number().default(50),
 	COMMAND_TIMEOUT_MS: z.coerce.number().default(30000),
 	RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
 	RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
 	CORS_ORIGIN: z.string().default("*"),
+
+	// authentication
+	REFRESH_TOKEN_SECRET: z.string(), 
+	ACCESS_TOKEN_SECRET: z.string()
 });
 
 const parsed = configSchema.safeParse(process.env);
@@ -36,6 +41,11 @@ export const config = {
 	corsOrigin: parsed.data.CORS_ORIGIN,
 	isDevelopment: parsed.data.NODE_ENV === "development",
 	isProduction: parsed.data.NODE_ENV === "production",
+	domain: parsed.data.DOMAIN,
+
+	// authentication
+	refreshTokenSecret: parsed.data.REFRESH_TOKEN_SECRET, 
+	accessTokenSecret: parsed.data.ACCESS_TOKEN_SECRET
 };
 
 export default config;

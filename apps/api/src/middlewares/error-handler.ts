@@ -1,11 +1,15 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 
+import { ApiError } from "@api/lib/errors";
 import type { ErrorResponse } from "@api/types";
 import { logger } from "../utils/logger";
 
 /**
- * Error handling middleware
+ * Central error handling middleware.
+ *
+ * Translates known error types into consistent, tRPC-style JSON responses.
+ * Anything thrown from a route (via `asyncHandler`) ends up here.
  */
 export function errorHandler(
 	err: Error,
@@ -20,29 +24,34 @@ export function errorHandler(
 		stack: err.stack,
 	});
 
-	// Handle Zod validation errors
+	// Application errors carry their own code + status.
+	if (err instanceof ApiError) {
+		res.status(err.statusCode).json(err.toResponse());
+		return;
+	}
+
+	// Zod validation errors -> BAD_REQUEST with the offending issues.
 	if (err instanceof ZodError) {
 		res.status(400).json({
-			error: "VALIDATION_ERROR",
+			error: "BAD_REQUEST",
 			message: "Invalid request parameters",
-			details: err.cause,
+			details: err.issues,
 		});
 		return;
 	}
 
-	// Handle path traversal errors
+	// Path traversal attempts -> BAD_REQUEST.
 	if (err.message.includes("Path traversal detected")) {
 		res.status(400).json({
-			error: "SECURITY_ERROR",
+			error: "BAD_REQUEST",
 			message: "Invalid path: path traversal detected",
 		});
 		return;
 	}
 
-	// Default error response
-	const statusCode = (err as any).statusCode || 500;
-	res.status(statusCode).json({
-		error: "INTERNAL_ERROR",
-		message: err.message || "An unexpected error occurred",
+	// Anything else is an unexpected, unhandled failure.
+	res.status(500).json({
+		error: "INTERNAL_SERVER_ERROR",
+		message: "An unexpected error occurred",
 	});
 }
