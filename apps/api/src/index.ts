@@ -3,10 +3,10 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 
-import config from "./config";
-import { errorHandler, requestLogger } from "./middlewares";
-import { createHealthRouter } from "./routers/health";
-import logger from "./utils/logger";
+import config from "@api/config";
+import { errorHandler, requestLogger } from "@api/middlewares";
+import { createHealthRouter } from "@api/routers/health";
+import logger from "@api/utils/logger";
 
 async function startServer() {
 	try {

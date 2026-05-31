@@ -5,6 +5,7 @@ dotenv.config({ debug: false });
 
 const configSchema = z.object({
 	PORT: z.coerce.number().default(8080),
+	DATABASE_URL: z.string(),
 	NODE_ENV: z
 		.enum(["development", "production", "test"])
 		.default("development"),
@@ -25,6 +26,7 @@ if (!parsed.success) {
 
 export const config = {
 	port: parsed.data.PORT,
+	databaseUrl: parsed.data.DATABASE_URL,
 	nodeEnv: parsed.data.NODE_ENV,
 	logLevel: parsed.data.LOG_LEVEL,
 	maxFileSizeMB: parsed.data.MAX_FILE_SIZE_MB,
