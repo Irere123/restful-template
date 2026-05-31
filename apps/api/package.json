@@ -1,0 +1,39 @@
+{
+	"name": "api",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"lint": "eslint 'src/**/*.ts'",
+		"check-types": "tsc --noEmit"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "module",
+	"dependencies": {
+		"compression": "^1.8.1",
+		"cors": "^2.8.6",
+		"dotenv": "^17.4.2",
+		"drizzle-orm": "^0.45.2",
+		"express": "^5.2.1",
+		"helmet": "^8.2.0",
+		"postgres": "^3.4.9",
+		"winston": "^3.19.0",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@repo/eslint-config": "workspace:*",
+		"@repo/tsconfig": "workspace:*",
+		"@types/compression": "^1.8.1",
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.6",
+		"drizzle-kit": "^0.31.10",
+		"eslint": "^10.4.1",
+		"tsx": "^4.22.3",
+		"typescript": "^6.0.3"
+	}
+}

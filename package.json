@@ -1,0 +1,26 @@
+{
+	"name": "restful-template",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"dev": "turbo dev",
+		"build": "turbo build",
+		"format": "biome format --write ."
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devEngines": {
+		"packageManager": {
+			"name": "pnpm",
+			"version": "^11.5.0",
+			"onFail": "download"
+		}
+	},
+	"type": "module",
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.16",
+		"turbo": "^2.9.16"
+	}
+}
