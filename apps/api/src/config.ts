@@ -3,29 +3,70 @@ import { z } from "zod";
 
 dotenv.config({ debug: false });
 
-const configSchema = z.object({
-	PORT: z.coerce.number().default(8080),
-	DATABASE_URL: z.string(),
-	NODE_ENV: z
-		.enum(["development", "production", "test"])
-		.default("development"),
-	DOMAIN: z.string().optional(),
-	LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
-	MAX_FILE_SIZE_MB: z.coerce.number().default(50),
-	COMMAND_TIMEOUT_MS: z.coerce.number().default(30000),
-	RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
-	RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
-	CORS_ORIGIN: z.string().default("*"),
+const configSchema = z
+	.object({
+		PORT: z.coerce.number().default(8080),
+		DATABASE_URL: z.string(),
+		NODE_ENV: z
+			.enum(["development", "production", "test"])
+			.default("development"),
+		DOMAIN: z.string().optional(),
+		LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
+		MAX_FILE_SIZE_MB: z.coerce.number().default(50),
+		COMMAND_TIMEOUT_MS: z.coerce.number().default(30000),
+		RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
+		RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
+		CORS_ORIGIN: z.string().default("*"),
 
-	// authentication
-	REFRESH_TOKEN_SECRET: z.string(), 
-	ACCESS_TOKEN_SECRET: z.string()
-});
+		// authentication
+		REFRESH_TOKEN_SECRET: z.string(),
+		ACCESS_TOKEN_SECRET: z.string(),
+	})
+	.superRefine((env, ctx) => {
+		// Enforce production-grade settings only when actually running in prod, so
+		// local development stays friction-free.
+		if (env.NODE_ENV !== "production") return;
+
+		for (const key of ["REFRESH_TOKEN_SECRET", "ACCESS_TOKEN_SECRET"] as const) {
+			if (env[key].length < 32) {
+				ctx.addIssue({
+					code: "custom",
+					path: [key],
+					message: `${key} must be at least 32 characters in production`,
+				});
+			}
+		}
+
+		if (env.REFRESH_TOKEN_SECRET === env.ACCESS_TOKEN_SECRET) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["ACCESS_TOKEN_SECRET"],
+				message: "ACCESS_TOKEN_SECRET and REFRESH_TOKEN_SECRET must differ",
+			});
+		}
+
+		if (!env.DOMAIN) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["DOMAIN"],
+				message: "DOMAIN is required in production (used to scope auth cookies)",
+			});
+		}
+
+		if (env.CORS_ORIGIN === "*") {
+			ctx.addIssue({
+				code: "custom",
+				path: ["CORS_ORIGIN"],
+				message:
+					"CORS_ORIGIN must be an explicit origin in production (credentials cannot be sent to '*')",
+			});
+		}
+	});
 
 const parsed = configSchema.safeParse(process.env);
 
 if (!parsed.success) {
-	console.error("Invalid environment variables:", parsed.error.format());
+	console.error("Invalid environment variables:", z.treeifyError(parsed.error));
 	process.exit(1);
 }
 
@@ -44,8 +85,8 @@ export const config = {
 	domain: parsed.data.DOMAIN,
 
 	// authentication
-	refreshTokenSecret: parsed.data.REFRESH_TOKEN_SECRET, 
-	accessTokenSecret: parsed.data.ACCESS_TOKEN_SECRET
+	refreshTokenSecret: parsed.data.REFRESH_TOKEN_SECRET,
+	accessTokenSecret: parsed.data.ACCESS_TOKEN_SECRET,
 };
 
 export default config;

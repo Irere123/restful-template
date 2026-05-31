@@ -1,58 +1,66 @@
-import { eq } from "drizzle-orm";
-import { Response } from "express";
+import type { CookieOptions, Response } from "express";
 import * as jwt from "jsonwebtoken";
 
 import config from "@api/config";
-import { db } from "@api/db";
-import { User, users } from "@api/db/schema";
+import { getUserById } from "@api/db/queries";
+import type { User, UserRole } from "@api/db/schema";
 import { __prod__ } from "@api/lib/constants";
 import { ApiError } from "@api/lib/errors";
 
 export type RefreshTokenData = {
 	userId: string;
-	refreshTokenVersion?: number;
+	refreshTokenVersion: number;
 };
 
 export type AccessTokenData = {
 	userId: string;
+	role: UserRole;
 };
 
-// __prod__ is a boolean that is true when the NODE_ENV is "production"
-const cookieOpts = {
+export type AuthTokens = {
+	accessToken: string;
+	refreshToken: string;
+};
+
+const ACCESS_TOKEN_TTL = "15m";
+const REFRESH_TOKEN_TTL = "30d";
+
+const cookieOpts: CookieOptions = {
 	httpOnly: true,
 	secure: __prod__,
 	sameSite: "lax",
 	path: "/",
-	domain: __prod__ ? `.${config.domain}` : "",
-	maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 year
-} as const;
+	// Only scope to a parent domain in production; in dev let the browser use the
+	// request host (an empty/invalid domain breaks cookies on localhost).
+	...(__prod__ && config.domain ? { domain: `.${config.domain}` } : {}),
+	maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days, matches the refresh token
+};
 
-export const createAuthTokens = (
-	user: User,
-): { refreshToken: string; accessToken: string } => {
+export const createAuthTokens = (user: User): AuthTokens => {
 	const refreshToken = jwt.sign(
 		{ userId: user.id, refreshTokenVersion: user.refreshTokenVersion },
 		config.refreshTokenSecret,
-		{
-			expiresIn: "30d",
-		},
+		{ expiresIn: REFRESH_TOKEN_TTL },
 	);
 
 	const accessToken = jwt.sign(
-		{ userId: user.id },
+		{ userId: user.id, role: user.role },
 		config.accessTokenSecret,
-		{
-			expiresIn: "15min",
-		},
+		{ expiresIn: ACCESS_TOKEN_TTL },
 	);
 
 	return { refreshToken, accessToken };
 };
 
+/** Write existing tokens to the response cookies. */
+export const setTokenCookies = (res: Response, tokens: AuthTokens) => {
+	res.cookie("id", tokens.accessToken, cookieOpts);
+	res.cookie("rid", tokens.refreshToken, cookieOpts);
+};
+
+/** Issue a fresh token pair for a user and write them to the response cookies. */
 export const sendAuthCookies = (res: Response, user: User) => {
-	const { accessToken, refreshToken } = createAuthTokens(user);
-	res.cookie("id", accessToken, cookieOpts);
-	res.cookie("rid", refreshToken, cookieOpts);
+	setTokenCookies(res, createAuthTokens(user));
 };
 
 export const clearAuthCookies = (res: Response) => {
@@ -60,51 +68,61 @@ export const clearAuthCookies = (res: Response) => {
 	res.clearCookie("rid", cookieOpts);
 };
 
+export type CheckTokensResult = {
+	userId: string;
+	role: UserRole;
+	/** Present only when the access token was refreshed via the refresh token. */
+	user?: User;
+	/** Present only when a new token pair was issued and should be re-sent. */
+	newTokens?: AuthTokens;
+};
+
+/**
+ * Validate the access token; if it is missing/expired, fall back to the refresh
+ * token and transparently mint a new token pair (sliding sessions).
+ *
+ * @throws {ApiError} UNAUTHORIZED when neither token can authenticate the request.
+ */
 export const checkTokens = async (
 	accessToken: string,
 	refreshToken: string,
-) => {
-	try {
-		// verify
-		const data = <AccessTokenData>(
-			jwt.verify(accessToken, config.accessTokenSecret)
-		);
-
-		// get userId from token data
-		return {
-			userId: data.userId,
-		};
-	} catch {
-		// token is expired or signed with a different secret
-		// so now check refresh token
+): Promise<CheckTokensResult> => {
+	// Fast path: a valid access token needs no database round-trip.
+	if (accessToken) {
+		try {
+			const data = jwt.verify(
+				accessToken,
+				config.accessTokenSecret,
+			) as AccessTokenData;
+			return { userId: data.userId, role: data.role };
+		} catch {
+			// Expired or invalid — fall through to the refresh token.
+		}
 	}
 
 	if (!refreshToken) {
 		throw new ApiError({ code: "UNAUTHORIZED" });
 	}
 
-	// 1. verify refresh token
-	let data;
+	let data: RefreshTokenData;
 	try {
-		data = <RefreshTokenData>(
-			jwt.verify(refreshToken, config.refreshTokenSecret)
-		);
+		data = jwt.verify(
+			refreshToken,
+			config.refreshTokenSecret,
+		) as RefreshTokenData;
 	} catch {
 		throw new ApiError({ code: "UNAUTHORIZED" });
 	}
 
-	// 2. get user
-	const user = await db.query.users.findFirst({
-		where: eq(users.id, data.userId),
-	});
+	const user = await getUserById(data.userId);
 
-	// 3.check refresh token version
+	// Reject if the user is gone or the refresh token has been revoked
+	// (refreshTokenVersion is bumped on logout-all / password change).
 	if (!user || user.refreshTokenVersion !== data.refreshTokenVersion) {
 		throw new ApiError({ code: "UNAUTHORIZED" });
 	}
 
-	return {
-		userId: data.userId,
-		user,
-	};
+	const newTokens = createAuthTokens(user);
+
+	return { userId: user.id, role: user.role, user, newTokens };
 };

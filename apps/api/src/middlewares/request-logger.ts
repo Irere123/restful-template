@@ -2,27 +2,12 @@ import type { NextFunction, Request, Response } from "express";
 
 import logger from "@api/utils/logger";
 
-/**
- * Request logging middleware
- */
-export function requestLogger(
-	req: Request,
-	res: Response,
-	next: NextFunction,
-): void {
-	const start = Date.now();
+/** Log method, path, status and duration once the response is fully sent. */
+const requestLogger = (req: Request, res: Response, next: NextFunction) => {
+	const startTime = Date.now();
 
-	// Log request
-	logger.info("Incoming request", {
-		method: req.method,
-		path: req.path,
-		query: req.query,
-		ip: req.ip,
-	});
-
-	// Log response
 	res.on("finish", () => {
-		const duration = Date.now() - start;
+		const duration = Date.now() - startTime;
 		logger.info("Request completed", {
 			method: req.method,
 			path: req.path,
@@ -32,4 +17,6 @@ export function requestLogger(
 	});
 
 	next();
-}
+};
+
+export { requestLogger };

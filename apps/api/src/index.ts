@@ -1,11 +1,18 @@
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 
 import config from "@api/config";
-import { errorHandler, requestLogger } from "@api/middlewares";
+import {
+	errorHandler,
+	globalRateLimiter,
+	requestLogger,
+} from "@api/middlewares";
+import { createAuthRouter } from "@api/routers/auth";
 import { createHealthRouter } from "@api/routers/health";
+import { createUsersRouter } from "@api/routers/users";
 import logger from "@api/utils/logger";
 
 async function startServer() {
@@ -25,24 +32,27 @@ async function startServer() {
 			}),
 		);
 
-		// Body parsing and compression
+		// Trust the reverse proxy (needed for secure cookies and correct client
+		// IPs behind a load balancer / proxy in production).
+		app.set("trust proxy", 1);
+
+		// Body parsing, cookies and compression
 		logger.info("Setting up body parsing and compression...");
 		app.use(express.json({ limit: "10mb" }));
 		app.use(express.urlencoded({ extended: true }));
+		app.use(cookieParser());
 		app.use(compression());
+		app.use(globalRateLimiter);
 
-		// Request logging
 		logger.info("Setting up request logging...");
 		app.use(requestLogger);
 
-		// API routes - test each router individually
 		logger.info("Setting up API routes...");
 
 		try {
-			logger.info("Adding health router...");
 			app.use(createHealthRouter());
-			logger.info("Health router added successfully");
-
+			app.use("/auth", createAuthRouter());
+			app.use("/users", createUsersRouter());
 			logger.info("All API routes configured");
 		} catch (routerError) {
 			logger.error("Router setup failed", {
