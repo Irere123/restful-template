@@ -11,6 +11,7 @@ import {
 	requestLogger,
 } from "@api/middlewares";
 import { createAuthRouter } from "@api/routers/auth";
+import { createDocsRouter } from "@api/routers/docs";
 import { createHealthRouter } from "@api/routers/health";
 import { createUsersRouter } from "@api/routers/users";
 import logger from "@api/utils/logger";
@@ -21,6 +22,10 @@ async function startServer() {
 
 		const app = express();
 		logger.info("Express app created successfully");
+
+		// Mounted before the global helmet so Swagger UI can apply its own,
+		// looser CSP without weakening the policy for the rest of the API.
+		app.use(createDocsRouter());
 
 		// Security middleware
 		logger.info("Setting up security middleware...");

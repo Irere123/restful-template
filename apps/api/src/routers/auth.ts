@@ -13,6 +13,12 @@ import { ApiError } from "@api/lib/errors";
 import { hashPassword, verifyPassword } from "@api/lib/password";
 import { asyncHandler, authRateLimiter, requireAuth } from "@api/middlewares";
 import {
+	changePasswordSchema,
+	loginSchema,
+	registerSchema,
+	updateProfileSchema,
+} from "@api/schemas/auth";
+import {
 	checkTokens,
 	clearAuthCookies,
 	createAuthTokens,
@@ -21,48 +27,6 @@ import {
 } from "@api/utils/create-auth-tokens";
 import { generateId } from "@api/utils/generate-id";
 import { sanitizeUser } from "@api/utils/sanitize-user";
-
-const emailSchema = z.string().trim().toLowerCase().email().max(254);
-const passwordSchema = z
-	.string()
-	.min(8, "Password must be at least 8 characters")
-	.max(128);
-const usernameSchema = z
-	.string()
-	.trim()
-	.min(3)
-	.max(30)
-	.regex(
-		/^[a-zA-Z0-9_]+$/,
-		"Username may only contain letters, numbers and underscores",
-	);
-const displayNameSchema = z.string().trim().min(1).max(50);
-
-const registerSchema = z.object({
-	email: emailSchema,
-	password: passwordSchema,
-	displayName: displayNameSchema,
-	username: usernameSchema.optional(),
-});
-
-const loginSchema = z.object({
-	email: emailSchema,
-	password: z.string().min(1),
-});
-
-const updateProfileSchema = z
-	.object({
-		displayName: displayNameSchema.optional(),
-		username: usernameSchema.optional(),
-	})
-	.refine((v) => Object.keys(v).length > 0, {
-		message: "No fields to update",
-	});
-
-const changePasswordSchema = z.object({
-	currentPassword: z.string().min(1),
-	newPassword: passwordSchema,
-});
 
 /** Parse a request body with a zod schema, throwing a BAD_REQUEST ApiError. */
 const parse = <T>(schema: z.ZodType<T>, body: unknown): T => {
