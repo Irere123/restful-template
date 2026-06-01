@@ -45,6 +45,16 @@ export const changePasswordSchema = z.object({
 	newPassword: passwordSchema,
 });
 
+/** A 6-digit numeric one-time verification code. */
+export const otpSchema = z
+	.string()
+	.trim()
+	.regex(/^\d{6}$/, "Code must be 6 digits");
+
+export const verifyEmailSchema = z.object({
+	code: otpSchema,
+});
+
 /** Shape of a user as returned by the API (password hash stripped). */
 export const publicUserSchema = z.object({
 	id: z.string(),
@@ -52,6 +62,7 @@ export const publicUserSchema = z.object({
 	displayName: z.string(),
 	email: z.string(),
 	role: z.enum(["user", "admin"]),
+	emailVerified: z.date().nullable(),
 	refreshTokenVersion: z.number().int(),
 	createdAt: z.date(),
 	updatedAt: z.date(),

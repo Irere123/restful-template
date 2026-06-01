@@ -81,3 +81,15 @@ export const listUsers = async (): Promise<User[]> => {
 		orderBy: (u, { desc }) => desc(u.createdAt),
 	});
 };
+
+/** Mark a user's email as verified (idempotent), stamping the current time. */
+export const setEmailVerified = async (
+	id: string,
+): Promise<User | undefined> => {
+	const [user] = await db
+		.update(users)
+		.set({ emailVerified: new Date(), updatedAt: new Date() })
+		.where(eq(users.id, id))
+		.returning();
+	return user;
+};

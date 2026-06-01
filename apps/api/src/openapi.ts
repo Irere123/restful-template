@@ -6,6 +6,7 @@ import {
 	publicUserSchema,
 	registerSchema,
 	updateProfileSchema,
+	verifyEmailSchema,
 } from "@api/schemas/auth";
 
 type JsonSchema = Record<string, unknown>;
@@ -29,6 +30,7 @@ const components = {
 		LoginRequest: toSchema(loginSchema),
 		UpdateProfileRequest: toSchema(updateProfileSchema),
 		ChangePasswordRequest: toSchema(changePasswordSchema),
+		VerifyEmailRequest: toSchema(verifyEmailSchema),
 		User: userSchema,
 		Error: {
 			type: "object",
@@ -105,6 +107,32 @@ const paths = {
 				201: userResponse("Account created; auth cookies set"),
 				400: errorResponse("Validation failed"),
 				409: errorResponse("Email or username already in use"),
+			},
+		},
+	},
+	"/auth/verify-email": {
+		post: {
+			tags: ["Auth"],
+			summary: "Confirm the email address using an OTP code",
+			security: [{ cookieAuth: [] }],
+			requestBody: jsonBody("VerifyEmailRequest"),
+			responses: {
+				200: userResponse("Email verified; updated user returned"),
+				400: errorResponse("Invalid, expired or missing code"),
+				401: errorResponse("Not authenticated"),
+				429: errorResponse("Too many incorrect attempts"),
+			},
+		},
+	},
+	"/auth/verify-email/resend": {
+		post: {
+			tags: ["Auth"],
+			summary: "Send a fresh email verification code",
+			security: [{ cookieAuth: [] }],
+			responses: {
+				200: successResponse,
+				401: errorResponse("Not authenticated"),
+				409: errorResponse("Email already verified"),
 			},
 		},
 	},
@@ -243,11 +271,7 @@ export const openApiDocument = {
 		version: "1.0.0",
 		description: "RESTful API with cookie-based authentication and RBAC.",
 	},
-	tags: [
-		{ name: "Health" },
-		{ name: "Auth" },
-		{ name: "Users" },
-	],
+	tags: [{ name: "Health" }, { name: "Auth" }, { name: "Users" }],
 	components,
 	security: [{ cookieAuth: [] }],
 	paths,

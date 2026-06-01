@@ -1,9 +1,70 @@
 {
-	"id": "4c4e90c5-64ca-4f67-afa0-0a675d7666c6",
-	"prevId": "27958769-9f5f-445a-acd4-8b38d729ae0e",
+	"id": "4edfd427-1ff6-42a4-808d-f3481eeb8865",
+	"prevId": "4c4e90c5-64ca-4f67-afa0-0a675d7666c6",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
+		"public.email_verification_codes": {
+			"name": "email_verification_codes",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"code_hash": {
+					"name": "code_hash",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"attempts": {
+					"name": "attempts",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"expires_at": {
+					"name": "expires_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"email_verification_codes_user_id_users_id_fk": {
+					"name": "email_verification_codes_user_id_users_id_fk",
+					"tableFrom": "email_verification_codes",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
 		"public.users": {
 			"name": "users",
 			"schema": "",
@@ -45,6 +106,12 @@
 					"primaryKey": false,
 					"notNull": true,
 					"default": "'user'"
+				},
+				"email_verified": {
+					"name": "email_verified",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": false
 				},
 				"refresh_token_version": {
 					"name": "refresh_token_version",

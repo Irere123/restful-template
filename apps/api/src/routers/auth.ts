@@ -9,6 +9,10 @@ import {
 	revokeRefreshTokens,
 	updateUser,
 } from "@api/db/queries";
+import {
+	confirmEmailVerification,
+	issueEmailVerification,
+} from "@api/lib/email-verification";
 import { ApiError } from "@api/lib/errors";
 import { hashPassword, verifyPassword } from "@api/lib/password";
 import { asyncHandler, authRateLimiter, requireAuth } from "@api/middlewares";
@@ -17,6 +21,7 @@ import {
 	loginSchema,
 	registerSchema,
 	updateProfileSchema,
+	verifyEmailSchema,
 } from "@api/schemas/auth";
 import {
 	checkTokens,
@@ -26,6 +31,7 @@ import {
 	setTokenCookies,
 } from "@api/utils/create-auth-tokens";
 import { generateId } from "@api/utils/generate-id";
+import logger from "@api/utils/logger";
 import { sanitizeUser } from "@api/utils/sanitize-user";
 
 /** Parse a request body with a zod schema, throwing a BAD_REQUEST ApiError. */
@@ -74,8 +80,60 @@ export const createAuthRouter = (): Router => {
 				username: username ?? null,
 			});
 
+			// Kick off email verification. Don't fail registration if the email
+			// can't be sent — the account exists and the user can request a resend.
+			try {
+				await issueEmailVerification(user);
+			} catch (err) {
+				logger.error("Failed to send verification email on register", {
+					userId: user.id,
+					error: err instanceof Error ? err.message : String(err),
+				});
+			}
+
 			sendAuthCookies(res, user);
 			res.status(201).json({ user: sanitizeUser(user) });
+		}),
+	);
+
+	router.post(
+		"/verify-email",
+		requireAuth,
+		authRateLimiter,
+		asyncHandler(async (req, res) => {
+			const { code } = parse(verifyEmailSchema, req.body);
+
+			const user = req.user ?? (await getUserById(req.userId!));
+			if (!user) {
+				throw new ApiError({ code: "UNAUTHORIZED" });
+			}
+
+			await confirmEmailVerification(user, code);
+
+			const updated = (await getUserById(user.id)) ?? user;
+			res.json({ user: sanitizeUser(updated) });
+		}),
+	);
+
+	router.post(
+		"/verify-email/resend",
+		requireAuth,
+		authRateLimiter,
+		asyncHandler(async (req, res) => {
+			const user = req.user ?? (await getUserById(req.userId!));
+			if (!user) {
+				throw new ApiError({ code: "UNAUTHORIZED" });
+			}
+
+			if (user.emailVerified) {
+				throw new ApiError({
+					code: "CONFLICT",
+					message: "Email is already verified",
+				});
+			}
+
+			await issueEmailVerification(user);
+			res.json({ success: true });
 		}),
 	);
 
