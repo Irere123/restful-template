@@ -12,6 +12,7 @@ export * from "./id";
 export * from "./logger";
 export * from "./middleware";
 export * from "./types";
+export * from "./validate";
 
 // NOTE: the Express `Request` augmentation lives in `express.d.ts`. It is picked
 // up by each project's own `tsconfig` `include` (core includes its own; every

@@ -1,13 +1,35 @@
 {
-  "name": "management",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module"
+	"name": "management",
+	"version": "1.0.0",
+	"description": "Fire Extinguisher Management microservice — extinguisher registry, inspection scheduling and maintenance logging.",
+	"main": "src/index.ts",
+	"type": "module",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"start": "tsx src/index.ts",
+		"build": "tsc --noEmit",
+		"check-types": "tsc --noEmit",
+		"lint": "eslint src",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@repo/core": "workspace:*",
+		"drizzle-orm": "^0.45.2",
+		"express": "^5.2.1",
+		"postgres": "^3.4.9",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@repo/eslint-config": "workspace:*",
+		"@repo/tsconfig": "workspace:*",
+		"@types/express": "^5.0.6",
+		"drizzle-kit": "^0.31.10",
+		"eslint": "^10.4.1",
+		"tsx": "^4.22.3",
+		"typescript": "^6.0.3"
+	}
 }
