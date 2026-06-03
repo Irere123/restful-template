@@ -18,6 +18,10 @@ own database (database-per-service), and authenticates requests by **statelessly
 verifying a shared JWT** — so no service depends on another at request time
 (except deliberate, explicit calls).
 
+> **Diagrams:** see [`docs/architecture.md`](docs/architecture.md) for rendered
+> component & request-flow diagrams, and [`docs/db-schema.md`](docs/db-schema.md)
+> for the per-service ER diagram.
+
 ```
                                   ┌──────────────────────────┐
        Browser / API client  ───► │   API Gateway  :8080     │  reverse proxy + aggregated Swagger

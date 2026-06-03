@@ -1,12 +1,15 @@
 "use client";
 
 import { DownloadIcon, FileTextIcon } from "lucide-react";
+import { useMemo } from "react";
 
 import { DataState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
+import { BarChart } from "@/components/ui/bar-chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardPanel, CardTitle } from "@/components/ui/card";
+import { DonutChart } from "@/components/ui/donut-chart";
 import {
 	Table,
 	TableBody,
@@ -16,6 +19,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
+import { useExtinguishers } from "@/lib/api/extinguishers";
 import {
 	reportExportUrl,
 	useComplianceReport,
@@ -61,35 +65,31 @@ function ExportButtons({ type }: { type: ReportType }): React.ReactElement {
 	);
 }
 
-function CountTable({
+/** Convert a `{ key: count }` map into recharts data under a named series key. */
+function seriesData(
+	counts: CountMap,
+	key: string,
+): Record<string, string | number>[] {
+	return Object.entries(counts).map(([name, value]) => ({
+		name: humanize(name),
+		[key]: value,
+	}));
+}
+
+function ChartCard({
 	title,
-	counts,
+	children,
 }: {
 	title: string;
-	counts: CountMap;
+	children: React.ReactNode;
 }): React.ReactElement {
-	const entries = Object.entries(counts);
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle className="text-base">{title}</CardTitle>
 			</CardHeader>
-			<CardPanel className="pt-0">
-				{entries.length === 0 ? (
-					<p className="py-4 text-muted-foreground text-sm">No data.</p>
-				) : (
-					<div className="divide-y">
-						{entries.map(([key, value]) => (
-							<div
-								key={key}
-								className="flex items-center justify-between py-2 text-sm"
-							>
-								<span className="text-muted-foreground">{humanize(key)}</span>
-								<span className="font-medium tabular-nums">{value}</span>
-							</div>
-						))}
-					</div>
-				)}
+			<CardPanel>
+				<div className="h-60">{children}</div>
 			</CardPanel>
 		</Card>
 	);
@@ -113,9 +113,28 @@ function InventoryTab(): React.ReactElement {
 						<StatCard label="This year" value={q.data.installedThisYear} />
 					</div>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-						<CountTable title="By type" counts={q.data.byType} />
-						<CountTable title="By size" counts={q.data.bySize} />
-						<CountTable title="By status" counts={q.data.byStatus} />
+						<ChartCard title="By type">
+							<DonutChart
+								data={seriesData(q.data.byType, "value")}
+								category="value"
+								index="name"
+							/>
+						</ChartCard>
+						<ChartCard title="By size">
+							<BarChart
+								data={seriesData(q.data.bySize, "Units")}
+								index="name"
+								categories={["Units"]}
+								showLegend={false}
+							/>
+						</ChartCard>
+						<ChartCard title="By status">
+							<DonutChart
+								data={seriesData(q.data.byStatus, "value")}
+								category="value"
+								index="name"
+							/>
+						</ChartCard>
 					</div>
 				</div>
 			)}
@@ -133,16 +152,35 @@ function InspectionsTab(): React.ReactElement {
 			onRetry={() => q.refetch()}
 		>
 			{q.data && (
-				<div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-					<StatCard label="Total" value={q.data.total} />
-					<StatCard label="Pending" value={q.data.pending} tone="info" />
-					<StatCard label="Completed" value={q.data.completed} tone="success" />
-					<StatCard
-						label="Overdue"
-						value={q.data.overdue}
-						tone={q.data.overdue > 0 ? "warning" : "default"}
-					/>
-					<StatCard label="Cancelled" value={q.data.cancelled} />
+				<div className="space-y-4">
+					<div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+						<StatCard label="Total" value={q.data.total} />
+						<StatCard label="Pending" value={q.data.pending} tone="info" />
+						<StatCard
+							label="Completed"
+							value={q.data.completed}
+							tone="success"
+						/>
+						<StatCard
+							label="Overdue"
+							value={q.data.overdue}
+							tone={q.data.overdue > 0 ? "warning" : "default"}
+						/>
+						<StatCard label="Cancelled" value={q.data.cancelled} />
+					</div>
+					<ChartCard title="Inspections by state">
+						<BarChart
+							data={[
+								{ name: "Pending", Inspections: q.data.pending },
+								{ name: "Completed", Inspections: q.data.completed },
+								{ name: "Overdue", Inspections: q.data.overdue },
+								{ name: "Cancelled", Inspections: q.data.cancelled },
+							]}
+							index="name"
+							categories={["Inspections"]}
+							showLegend={false}
+						/>
+					</ChartCard>
 				</div>
 			)}
 		</DataState>
@@ -182,6 +220,19 @@ function ComplianceTab(): React.ReactElement {
 							tone={q.data.upcomingCount > 0 ? "warning" : "default"}
 						/>
 					</div>
+
+					<ChartCard title="Compliance breakdown">
+						<DonutChart
+							data={[
+								{ name: "Compliant", value: q.data.compliantCount },
+								{ name: "Expired", value: q.data.expiredCount },
+								{ name: "Expiring", value: q.data.upcomingCount },
+							]}
+							category="value"
+							index="name"
+							colors={["emerald", "rose", "amber"]}
+						/>
+					</ChartCard>
 
 					{(q.data.expired.length > 0 || q.data.upcoming.length > 0) && (
 						<Card className="overflow-hidden">
@@ -231,6 +282,18 @@ function ComplianceTab(): React.ReactElement {
 
 function MaintenanceTab(): React.ReactElement {
 	const q = useMaintenanceReport();
+	const extinguishers = useExtinguishers();
+	const serialById = useMemo(() => {
+		const map = new Map<string, string>();
+		for (const e of extinguishers.data ?? []) map.set(e.id, e.serialNumber);
+		return map;
+	}, [extinguishers.data]);
+	const topServiced = (q.data?.frequencyByExtinguisher ?? [])
+		.slice(0, 8)
+		.map((f) => ({
+			name: serialById.get(f.extinguisherId) ?? f.extinguisherId.slice(0, 8),
+			Services: f.count,
+		}));
 	return (
 		<DataState
 			isLoading={q.isLoading}
@@ -251,6 +314,18 @@ function MaintenanceTab(): React.ReactElement {
 							value={q.data.frequencyByExtinguisher.length}
 						/>
 					</div>
+					{topServiced.length > 0 && (
+						<ChartCard title="Most serviced units">
+							<BarChart
+								data={topServiced}
+								index="name"
+								categories={["Services"]}
+								layout="vertical"
+								yAxisWidth={96}
+								showLegend={false}
+							/>
+						</ChartCard>
+					)}
 					{q.data.frequencyByExtinguisher.length > 0 && (
 						<Card className="overflow-hidden">
 							<CardHeader>

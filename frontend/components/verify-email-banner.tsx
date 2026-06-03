@@ -1,6 +1,7 @@
 "use client";
 
-import { MailWarningIcon } from "lucide-react";
+import { Mail01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 
 import { useAuth } from "@/components/providers/auth-provider";
@@ -18,7 +19,7 @@ export function VerifyEmailBanner(): React.ReactElement | null {
 
 	return (
 		<Alert variant="warning">
-			<MailWarningIcon />
+			<HugeiconsIcon icon={Mail01Icon} />
 			<AlertDescription>
 				Your email isn’t verified yet. Verify it to secure your account.
 			</AlertDescription>

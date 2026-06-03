@@ -1,17 +1,17 @@
 "use client";
 
 import {
-	ChevronsUpDownIcon,
-	LogOutIcon,
-	MailIcon,
-	MonitorOffIcon,
-	SettingsIcon,
-} from "lucide-react";
+	ComputerRemoveIcon,
+	Logout01Icon,
+	Mail01Icon,
+	Settings02Icon,
+	UnfoldMoreIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/components/providers/auth-provider";
-import { RoleBadge } from "@/components/status-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
 	Menu,
@@ -70,7 +70,10 @@ export function UserMenu(): React.ReactElement | null {
 						{user.email}
 					</span>
 				</div>
-				<ChevronsUpDownIcon className="ms-auto size-4 opacity-70" />
+				<HugeiconsIcon
+					icon={UnfoldMoreIcon}
+					className="ms-auto size-4 opacity-70"
+				/>
 			</MenuTrigger>
 			<MenuPopup align="end" side="top" className="w-60">
 				<div className="flex items-center gap-2 px-2 py-1.5">
@@ -87,26 +90,25 @@ export function UserMenu(): React.ReactElement | null {
 							{user.email}
 						</span>
 					</div>
-					<RoleBadge role={user.role} />
 				</div>
 				<MenuSeparator />
 				<MenuItem render={<Link href="/settings" />}>
-					<SettingsIcon />
+					<HugeiconsIcon icon={Settings02Icon} />
 					Account settings
 				</MenuItem>
 				{!user.emailVerified && (
 					<MenuItem render={<Link href="/auth/verify-email" />}>
-						<MailIcon />
+						<HugeiconsIcon icon={Mail01Icon} />
 						Verify email
 					</MenuItem>
 				)}
 				<MenuSeparator />
 				<MenuItem onClick={() => signOut(false)}>
-					<LogOutIcon />
+					<HugeiconsIcon icon={Logout01Icon} />
 					Sign out
 				</MenuItem>
 				<MenuItem variant="destructive" onClick={() => signOut(true)}>
-					<MonitorOffIcon />
+					<HugeiconsIcon icon={ComputerRemoveIcon} />
 					Sign out all devices
 				</MenuItem>
 			</MenuPopup>

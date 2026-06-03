@@ -1,14 +1,15 @@
 "use client";
 
 import {
-	BellIcon,
-	ChartColumnIcon,
+	ChartBarBigIcon,
 	ClipboardCheckIcon,
+	DashboardSquare01Icon,
 	FireExtinguisherIcon,
-	LayoutDashboardIcon,
-	UsersIcon,
-	WrenchIcon,
-} from "lucide-react";
+	Notification03Icon,
+	UserMultipleIcon,
+	Wrench01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -33,25 +34,25 @@ import { UserMenu } from "@/components/user-menu";
 type NavItem = {
 	title: string;
 	href: string;
-	icon: React.ComponentType<{ className?: string }>;
+	icon: IconSvgElement;
 	adminOnly?: boolean;
 };
 
 const PRIMARY_NAV: NavItem[] = [
-	{ title: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
+	{ title: "Dashboard", href: "/dashboard", icon: DashboardSquare01Icon },
 	{
 		title: "Extinguishers",
 		href: "/extinguishers",
 		icon: FireExtinguisherIcon,
 	},
 	{ title: "Inspections", href: "/inspections", icon: ClipboardCheckIcon },
-	{ title: "Maintenance", href: "/maintenance", icon: WrenchIcon },
-	{ title: "Reports", href: "/reports", icon: ChartColumnIcon },
-	{ title: "Alerts", href: "/notifications", icon: BellIcon },
+	{ title: "Maintenance", href: "/maintenance", icon: Wrench01Icon },
+	{ title: "Reports", href: "/reports", icon: ChartBarBigIcon },
+	{ title: "Alerts", href: "/notifications", icon: Notification03Icon },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-	{ title: "Users", href: "/users", icon: UsersIcon, adminOnly: true },
+	{ title: "Users", href: "/users", icon: UserMultipleIcon, adminOnly: true },
 ];
 
 function NavMenu({ items }: { items: NavItem[] }): React.ReactElement {
@@ -71,7 +72,7 @@ function NavMenu({ items }: { items: NavItem[] }): React.ReactElement {
 							onClick={() => isMobile && setOpenMobile(false)}
 							render={<Link href={item.href} />}
 						>
-							<item.icon />
+							<HugeiconsIcon icon={item.icon} />
 							<span>{item.title}</span>
 						</SidebarMenuButton>
 					</SidebarMenuItem>

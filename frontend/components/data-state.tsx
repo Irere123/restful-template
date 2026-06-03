@@ -1,4 +1,5 @@
-import { TriangleAlertIcon } from "lucide-react";
+import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ export function DataState({
 			<Empty>
 				<EmptyHeader>
 					<EmptyMedia variant="icon">
-						<TriangleAlertIcon className="text-destructive" />
+						<HugeiconsIcon icon={Alert02Icon} className="text-destructive" />
 					</EmptyMedia>
 					<EmptyTitle>Couldn’t load this</EmptyTitle>
 					<EmptyDescription>{errorMessage(error)}</EmptyDescription>

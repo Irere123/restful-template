@@ -1,4 +1,4 @@
-import { FlameIcon } from "lucide-react";
+import Image from "next/image";
 import type React from "react";
 
 import { cn } from "@/lib/utils";
@@ -14,9 +14,15 @@ export function Brand({
 }): React.ReactElement {
 	return (
 		<span className={cn("flex items-center gap-2", className)}>
-			<span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-				<FlameIcon className="size-4.5" />
-			</span>
+			<Image
+				src="/logo.svg"
+				alt={iconOnly ? "TZW Fire Safety" : ""}
+				width={38}
+				height={38}
+				unoptimized
+				priority
+				className="size-9 shrink-0"
+			/>
 			{!iconOnly && (
 				<span className="flex flex-col leading-none">
 					<span className="font-heading font-semibold text-sm">

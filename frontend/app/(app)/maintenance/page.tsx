@@ -50,25 +50,25 @@ export default function MaintenancePage(): React.ReactElement {
 				title="Maintenance"
 				description="A log of all maintenance carried out on your extinguishers."
 				actions={
-					<RoleGate roles={["admin", "inspector"]}>
-						<Button onClick={() => setFormOpen(true)}>
-							<PlusIcon />
-							Log maintenance
-						</Button>
-					</RoleGate>
+					<>
+						<FilterSelect
+							value={extinguisherId}
+							onChange={setExtinguisherId}
+							options={extinguisherOptions}
+							allLabel="All extinguishers"
+							ariaLabel="Filter by extinguisher"
+							size="default"
+							className="min-w-56"
+						/>
+						<RoleGate roles={["admin", "inspector"]}>
+							<Button onClick={() => setFormOpen(true)}>
+								<PlusIcon />
+								Log maintenance
+							</Button>
+						</RoleGate>
+					</>
 				}
 			/>
-
-			<div className="flex items-center gap-2">
-				<FilterSelect
-					value={extinguisherId}
-					onChange={setExtinguisherId}
-					options={extinguisherOptions}
-					allLabel="All extinguishers"
-					ariaLabel="Filter by extinguisher"
-					className="min-w-56"
-				/>
-			</div>
 
 			<Card className="overflow-hidden">
 				<DataState

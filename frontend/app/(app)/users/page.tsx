@@ -165,13 +165,13 @@ export default function UsersPage(): React.ReactElement {
 													<EllipsisIcon />
 												</MenuTrigger>
 												<MenuPopup align="end">
-													<MenuGroupLabel>Change role</MenuGroupLabel>
 													<MenuRadioGroup
 														value={u.role}
 														onValueChange={(value) =>
 															changeRole(u, value as UserRole)
 														}
 													>
+														<MenuGroupLabel>Change role</MenuGroupLabel>
 														{USER_ROLES.map((role) => (
 															<MenuRadioItem key={role} value={role}>
 																{labelForRole(role)}

@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
 import { StatCard } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
+import { BarChart } from "@/components/ui/bar-chart";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -23,6 +24,8 @@ import {
 	CardPanel,
 	CardTitle,
 } from "@/components/ui/card";
+import { ChartPlaceholder } from "@/components/ui/chart-common";
+import { DonutChart } from "@/components/ui/donut-chart";
 import { useExtinguishers } from "@/lib/api/extinguishers";
 import {
 	useComplianceReport,
@@ -30,7 +33,7 @@ import {
 	useInventoryReport,
 	useMaintenanceReport,
 } from "@/lib/api/reports";
-import { formatDate } from "@/lib/format";
+import { formatDate, humanize } from "@/lib/format";
 
 export default function DashboardPage(): React.ReactElement {
 	const { user } = useAuth();
@@ -49,6 +52,16 @@ export default function DashboardPage(): React.ReactElement {
 	const loading = inventory.isLoading;
 	const active = inventory.data?.byStatus.active ?? 0;
 	const expired = compliance.data?.expiredCount ?? 0;
+
+	const statusData = Object.entries(inventory.data?.byStatus ?? {}).map(
+		([key, value]) => ({ name: humanize(key), value }),
+	);
+	const inspectionData = [
+		{ name: "Pending", Inspections: inspections.data?.pending ?? 0 },
+		{ name: "Completed", Inspections: inspections.data?.completed ?? 0 },
+		{ name: "Overdue", Inspections: inspections.data?.overdue ?? 0 },
+		{ name: "Cancelled", Inspections: inspections.data?.cancelled ?? 0 },
+	];
 
 	return (
 		<div className="space-y-6">
@@ -113,6 +126,45 @@ export default function DashboardPage(): React.ReactElement {
 					icon={<TriangleAlertIcon />}
 					loading={compliance.isLoading}
 				/>
+			</div>
+
+			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-base">Inventory by status</CardTitle>
+						<CardDescription>Lifecycle state across all units.</CardDescription>
+					</CardHeader>
+					<CardPanel>
+						<div className="h-64">
+							{inventory.data ? (
+								<DonutChart data={statusData} category="value" index="name" />
+							) : (
+								<ChartPlaceholder loading={inventory.isLoading} />
+							)}
+						</div>
+					</CardPanel>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-base">Inspections</CardTitle>
+						<CardDescription>Breakdown by current state.</CardDescription>
+					</CardHeader>
+					<CardPanel>
+						<div className="h-64">
+							{inspections.data ? (
+								<BarChart
+									data={inspectionData}
+									index="name"
+									categories={["Inspections"]}
+									showLegend={false}
+								/>
+							) : (
+								<ChartPlaceholder loading={inspections.isLoading} />
+							)}
+						</div>
+					</CardPanel>
+				</Card>
 			</div>
 
 			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -17,6 +17,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import {
 	useChangePassword,
 	useDeleteAccount,
@@ -318,9 +319,22 @@ export default function SettingsPage(): React.ReactElement {
 				title="Settings"
 				description="Manage your profile, password and account."
 			/>
-			<ProfileCard />
-			<PasswordCard />
-			<DangerCard />
+			<Tabs defaultValue="profile">
+				<TabsList>
+					<TabsTab value="profile">Profile</TabsTab>
+					<TabsTab value="password">Password</TabsTab>
+					<TabsTab value="account">Account</TabsTab>
+				</TabsList>
+				<TabsPanel value="profile" className="pt-2">
+					<ProfileCard />
+				</TabsPanel>
+				<TabsPanel value="password" className="pt-2">
+					<PasswordCard />
+				</TabsPanel>
+				<TabsPanel value="account" className="pt-2">
+					<DangerCard />
+				</TabsPanel>
+			</Tabs>
 		</div>
 	);
 }
