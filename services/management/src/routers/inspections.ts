@@ -10,6 +10,8 @@ import {
 	updateInspection,
 } from "@management/db/queries";
 import { notifyInspectionScheduled } from "@management/lib/notifications";
+import { getAlertRecipients } from "@management/lib/recipients";
+import logger from "@management/logger";
 import { requireAuth, requireRole } from "@management/middleware/auth";
 import {
 	completeInspectionSchema,
@@ -50,17 +52,45 @@ export const createInspectionsRouter = (): Router => {
 				scheduledBy: req.userId ?? null,
 			});
 
-			// Notify relevant personnel (best-effort; never blocks the response).
-			const to = data.notifyEmail ?? req.userEmail;
-			if (to) {
-				await notifyInspectionScheduled({
-					to,
-					extinguisherSerial: extinguisher.serialNumber,
-					location: extinguisher.location,
-					date: data.scheduledDate,
-					time: data.scheduledTime,
+			// Notify the relevant personnel — the inspectors/admins on the alert
+			// roster plus the scheduling user (and any explicit recipient). All
+			// best-effort: a notification or directory outage must never fail
+			// scheduling, since the inspection is already saved.
+			const recipients = new Map<
+				string,
+				{ to: string; displayName?: string }
+			>();
+			const addRecipient = (email?: string | null, displayName?: string) => {
+				const to = email?.trim();
+				if (!to) return;
+				const key = to.toLowerCase();
+				if (!recipients.has(key)) recipients.set(key, { to, displayName });
+			};
+
+			addRecipient(data.notifyEmail);
+			addRecipient(req.userEmail);
+			try {
+				for (const recipient of await getAlertRecipients()) {
+					addRecipient(recipient.email, recipient.displayName);
+				}
+			} catch (err) {
+				logger.error("Failed to resolve inspection alert recipients", {
+					error: err instanceof Error ? err.message : String(err),
 				});
 			}
+
+			await Promise.all(
+				[...recipients.values()].map((recipient) =>
+					notifyInspectionScheduled({
+						to: recipient.to,
+						displayName: recipient.displayName,
+						extinguisherSerial: extinguisher.serialNumber,
+						location: extinguisher.location,
+						date: data.scheduledDate,
+						time: data.scheduledTime,
+					}),
+				),
+			);
 
 			res.status(201).json({ inspection });
 		}),
