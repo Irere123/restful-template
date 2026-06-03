@@ -12,81 +12,37 @@ scalability, maintainability, security and high availability.
 
 ## Architecture
 
-A single **API Gateway** is the only public entry point. It reverse-proxies to
-four domain microservices. Each service is independently deployable, owns its
-own database (database-per-service), and authenticates requests by **statelessly
-verifying a shared JWT** — so no service depends on another at request time
-(except deliberate, explicit calls).
+The system uses a small gateway-first microservice layout. The browser calls the
+Next.js app, Next rewrites `/api/*` to the gateway, and the gateway routes to the
+service that owns the requested domain.
 
-> **Diagrams:** see [`docs/architecture.md`](docs/architecture.md) for rendered
-> component & request-flow diagrams, and [`docs/db-schema.md`](docs/db-schema.md)
-> for the per-service ER diagram.
-
-```
-                                  ┌──────────────────────────┐
-       Browser / API client  ───► │   API Gateway  :8080     │  reverse proxy + aggregated Swagger
-                                  └─────────────┬────────────┘
-            ┌───────────────┬───────────────────┼─────────────────────────┐
-            ▼               ▼                   ▼                         ▼
-   ┌─────────────┐  ┌──────────────────┐  ┌───────────────┐     ┌──────────────────┐
-   │   auth      │  │   management     │  │  reporting    │     │  notification    │
-   │   :8081     │  │   :8082          │  │  :8083        │     │  :8084 (internal)│
-   │ users, JWT, │  │ extinguishers,   │  │ aggregates,   │     │ all email +      │
-   │ RBAC, OTP   │  │ inspections,     │  │ PDF/CSV export│     │ audit log        │
-   │             │  │ maintenance      │  │ (no DB)       │     │                  │
-   │ DB:         │  │ DB:              │  │               │     │ DB:              │
-   │ restful_auth│  │ restful_management│ │               │     │ restful_notification
-   └──────┬──────┘  └────────┬─────────┘  └──────┬────────┘     └────────▲─────────┘
-          │                  │                   │                       │
-          │ send OTP/reset   │ send alerts       │ read (cookie fwd)     │
-          └──────────────────┴───────────────────┴───────────────────────┘
-                          (internal service-to-service HTTP)
+```mermaid
+flowchart LR
+    B[Browser] --> F[Next.js :3000]
+    F -->|/api/* rewrite| G[API Gateway :8080]
+    G --> A[Auth :8081]
+    G --> M[Management :8082]
+    G --> R[Reporting :8083]
+    A -. email .-> N[Notification :8084]
+    M -. alerts .-> N
+    R -. reads with caller cookie .-> M
 ```
 
-### Services
+| Service | Responsibility | State |
+| --- | --- | --- |
+| `gateway` | Public backend entry point, proxying, rate limits, Swagger index | Stateless |
+| `auth` | Users, login, JWT cookies, refresh, RBAC, OTP/password reset | Auth DB |
+| `management` | Extinguishers, inspections, maintenance, scheduled alert jobs | Management DB |
+| `reporting` | Aggregated reports and PDF/CSV export | Stateless |
+| `notification` | Internal email delivery and audit log | Notification DB |
+| `packages/core` | Shared middleware, errors, logging, HTTP helpers, validation | Library |
 
-| Service          | Port | Owns / Does                                                                 | Database                |
-| ---------------- | ---- | -------------------------------------------------------------------------- | ----------------------- |
-| **gateway**      | 8080 | Single public entry point; reverse proxy; CORS; rate limit; unified Swagger | — (stateless)           |
-| **auth**         | 8081 | Registration, login, JWT sessions, RBAC, profile, OTP email verification, password reset, user management | `restful_auth`          |
-| **management**   | 8082 | Extinguisher registry, inspection scheduling/completion, maintenance logs; **cron jobs** (expiry scan + inspection reminders) | `restful_management`    |
-| **reporting**    | 8083 | Real-time inventory/inspection/compliance/maintenance reports + PDF/CSV export | — (aggregates over HTTP) |
-| **notification** | 8084 | Centralized outbound email (Resend) + delivery audit log; lifecycle + digest emails (internal-only) | `restful_notification`  |
-| `packages/core`  | —    | Shared library: logging, errors, JWT auth middleware, HTTP client, Express bootstrap, validation | —                       |
+Core rules: services own their data, access JWTs are verified locally, refresh is
+owned by auth, reporting reads through management, and notification is
+internal-only.
 
-### Key design decisions
-
-- **Database-per-service.** Each service owns its schema; there are no
-  cross-service foreign keys. Foreign references (e.g. an inspection's
-  `inspectorId`) are stored as plain ids carried in the JWT.
-- **Stateless JWT auth.** The auth service signs a short-lived **access token**
-  (15 min) and a long-lived **refresh token** (30 days) into `httpOnly` cookies.
-  Every other service verifies the access token with the shared
-  `ACCESS_TOKEN_SECRET` — no DB lookup, no call to auth. Token **refresh** lives
-  only in auth (it owns the user table).
-- **Three roles (RBAC):** `user` (schedule inspections, view status/history),
-  `inspector` (conduct inspections, log results & maintenance), `admin` (manage
-  users, settings, all data, reports).
-- **Centralized notifications.** All outbound email is owned by the notification
-  service. Other services call it over an **internal-key-authenticated** HTTP
-  endpoint; in development (no `RESEND_API_KEY`) emails are logged, not sent, and
-  every attempt is recorded in `restful_notification.notifications`. Covered
-  events: OTP verification, password reset, **welcome**, **new-sign-in** and
-  **sign-out** security alerts, **account deletion**, inspection scheduled,
-  maintenance logged, and the scheduled **expiry** / **inspection-reminder**
-  digests.
-- **Automated, scheduled alerts (cron).** The management service runs background
-  jobs with `node-cron`: a daily **expiry scan** (flips lapsed units to
-  `expired` and emails admins/inspectors a digest of expired + soon-to-expire
-  extinguishers) and a daily **inspection reminder** (digest of overdue +
-  upcoming inspections). Recipients are resolved from auth's internal directory
-  API. Both jobs are idempotent (each unit is alerted once when it crosses its
-  date) and can be run on demand via internal `POST /jobs/*` endpoints. See
-  [Automated notifications & scheduled jobs](#automated-notifications--scheduled-jobs).
-- **Reporting is an aggregator** with no database. It forwards the caller's
-  cookie to the management service so the same authentication/RBAC applies.
-- **Shared `@repo/core`** is consumed as TypeScript source (no build step) via
-  bundler module resolution + `tsx`, keeping all services consistent.
+See [`docs/architecture.md`](docs/architecture.md) for the request-flow diagram
+and [`docs/db-schema.md`](docs/db-schema.md) for the per-service data model.
 
 ### Tech stack
 

@@ -235,7 +235,7 @@ function ComplianceTab(): React.ReactElement {
 					</ChartCard>
 
 					{(q.data.expired.length > 0 || q.data.upcoming.length > 0) && (
-						<Card className="overflow-hidden">
+						<Card className="overflow-hidden rounded-lg">
 							<Table>
 								<TableHeader>
 									<TableRow>
@@ -327,7 +327,7 @@ function MaintenanceTab(): React.ReactElement {
 						</ChartCard>
 					)}
 					{q.data.frequencyByExtinguisher.length > 0 && (
-						<Card className="overflow-hidden">
+						<Card className="overflow-hidden rounded-lg">
 							<CardHeader>
 								<CardTitle className="text-base">
 									Most frequently serviced

@@ -70,7 +70,7 @@ export default function MaintenancePage(): React.ReactElement {
 				}
 			/>
 
-			<Card className="overflow-hidden">
+			<Card className="overflow-hidden rounded-lg">
 				<DataState
 					isLoading={query.isLoading}
 					isError={query.isError}

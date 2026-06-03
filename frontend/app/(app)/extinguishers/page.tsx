@@ -138,7 +138,7 @@ export default function ExtinguishersPage(): React.ReactElement {
 				</div>
 			</div>
 
-			<Card className="overflow-hidden">
+			<Card className="overflow-hidden rounded-lg">
 				<DataState
 					isLoading={query.isLoading}
 					isError={query.isError}

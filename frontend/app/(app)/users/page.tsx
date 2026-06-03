@@ -103,7 +103,7 @@ export default function UsersPage(): React.ReactElement {
 				description="Manage accounts and roles across the organization."
 			/>
 
-			<Card className="overflow-hidden">
+			<Card className="overflow-hidden rounded-lg">
 				<DataState
 					isLoading={query.isLoading}
 					isError={query.isError}
