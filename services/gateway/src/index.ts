@@ -1,3 +1,6 @@
+import config from "@gateway/config";
+import { createGatewayDocsRouter } from "@gateway/docs";
+import logger from "@gateway/logger";
 import {
 	createErrorHandler,
 	createGlobalRateLimiter,
@@ -7,14 +10,7 @@ import {
 } from "@repo/core";
 import cors from "cors";
 import express from "express";
-import {
-	createProxyMiddleware,
-	type Options,
-} from "http-proxy-middleware";
-
-import config from "@gateway/config";
-import { createGatewayDocsRouter } from "@gateway/docs";
-import logger from "@gateway/logger";
+import { createProxyMiddleware, type Options } from "http-proxy-middleware";
 
 const app = express();
 
