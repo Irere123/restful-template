@@ -113,7 +113,7 @@ const paths = {
 			responses: {
 				201: userResponse("Account created; auth cookies set"),
 				400: errorResponse("Validation failed"),
-				409: errorResponse("Email or username already in use"),
+				409: errorResponse("Email already in use"),
 			},
 		},
 	},

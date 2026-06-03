@@ -162,7 +162,7 @@ All routes below are called on `http://localhost:8080`.
 
 | Method & path                | Role         | Description                              |
 | ---------------------------- | ------------ | ---------------------------------------- |
-| `POST /auth/register`        | public       | Create account, start session, send OTP  |
+| `POST /auth/register`        | public       | Create account (`firstName`, `lastName`, `email`, `password`), start session, send OTP |
 | `POST /auth/login`           | public       | Log in (sets `httpOnly` cookies)          |
 | `POST /auth/logout`          | public       | Clear this client's session               |
 | `POST /auth/logout-all`      | auth         | Revoke every session                      |
@@ -219,7 +219,7 @@ Extinguisher **sizes**: `2.5lb`, `5lb`, `9lb`, `12lb`.
 G=http://localhost:8080
 # Register (saves session cookies)
 curl -s -c cj.txt -H content-type:application/json -X POST $G/auth/register \
-  -d '{"email":"admin@tzw.test","password":"Password123","displayName":"Admin"}'
+  -d '{"firstName":"Admin","lastName":"User","email":"admin@tzw.test","password":"Password123"}'
 # (promote to admin out-of-band, then) log in
 curl -s -c cj.txt -H content-type:application/json -X POST $G/auth/login \
   -d '{"email":"admin@tzw.test","password":"Password123"}'
