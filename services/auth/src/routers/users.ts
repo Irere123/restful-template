@@ -1,6 +1,3 @@
-import { ApiError, asyncHandler } from "@repo/core";
-import { Router } from "express";
-
 import {
 	deleteUser,
 	getUserById,
@@ -12,8 +9,10 @@ import { requireAuth, requireRole } from "@auth/middleware/auth";
 import { updateUserRoleSchema } from "@auth/schemas/auth";
 import { parse } from "@auth/utils/parse";
 import { sanitizeUser } from "@auth/utils/sanitize-user";
+import { ApiError, asyncHandler } from "@repo/core";
+import { Router } from "express";
 
-const getIdParam = (raw: string | undefined): string => {
+const getIdParam = (raw: unknown): string => {
 	if (typeof raw !== "string" || raw.length === 0) {
 		throw new ApiError({ code: "BAD_REQUEST", message: "Invalid user id" });
 	}
