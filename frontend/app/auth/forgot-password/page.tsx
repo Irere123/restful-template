@@ -6,13 +6,6 @@ import { useState } from "react";
 
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardDescription,
-	CardHeader,
-	CardPanel,
-	CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useForgotPassword } from "@/lib/api/auth";
 import { toast } from "@/lib/toast";
@@ -40,78 +33,82 @@ export default function ForgotPasswordPage(): React.ReactElement {
 
 	if (sent) {
 		return (
-			<Card>
-				<CardPanel className="flex flex-col items-center gap-4 py-10 text-center">
-					<span className="flex size-11 items-center justify-center rounded-full bg-success/10 text-success">
-						<CheckCircle2Icon className="size-6" />
-					</span>
-					<div className="space-y-1">
-						<CardTitle>Check your email</CardTitle>
-						<CardDescription>
-							If an account exists for{" "}
-							<span className="font-medium text-foreground">{email}</span>,
-							we’ve sent a password-reset code.
-						</CardDescription>
-					</div>
-					<Button
-						className="w-full"
-						render={<Link href="/auth/reset-password" />}
-					>
-						Enter reset code
-					</Button>
-					<Link
-						href="/auth/login"
-						className="text-muted-foreground text-sm hover:text-foreground hover:underline"
-					>
-						Back to sign in
-					</Link>
-				</CardPanel>
-			</Card>
+			<div className="text-center">
+				<span className="mx-auto flex size-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+					<CheckCircle2Icon className="size-6" />
+				</span>
+				<h1 className="mt-5 font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+					Check your email
+				</h1>
+				<p className="mt-3 text-base text-slate-600">
+					If an account exists for{" "}
+					<span className="font-semibold text-slate-950">{email}</span>, we&apos;ve
+					sent a password-reset code.
+				</p>
+				<Button
+					size="xl"
+					className="mt-8 h-11 w-full border-violet-600 bg-violet-600 text-white shadow-none hover:bg-violet-700"
+					render={<Link href="/auth/reset-password" />}
+				>
+					Enter reset code
+				</Button>
+				<Link
+					href="/auth/login"
+					className="mt-6 inline-flex font-semibold text-sm text-violet-600 hover:text-violet-700"
+				>
+					Back to sign in
+				</Link>
+			</div>
 		);
 	}
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Forgot password</CardTitle>
-				<CardDescription>
-					Enter your email and we’ll send you a code to reset it.
-				</CardDescription>
-			</CardHeader>
-			<CardPanel>
-				<form
-					className="flex flex-col gap-4"
-					onSubmit={handleSubmit}
-					noValidate
+		<div>
+			<div>
+				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+					Forgot password
+				</h1>
+				<p className="mt-3 text-base text-slate-600">
+					Enter your email and we&apos;ll send you a code to reset it.
+				</p>
+			</div>
+
+			<form className="mt-9 flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+				<FormField label="Email" htmlFor="email" error={error}>
+					<Input
+						id="email"
+						type="email"
+						autoComplete="email"
+						placeholder="Enter your email"
+						size="lg"
+						value={email}
+						onChange={(e) => {
+							setEmail(e.target.value);
+							setError("");
+						}}
+						aria-invalid={Boolean(error)}
+						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+					/>
+				</FormField>
+				<Button
+					type="submit"
+					size="xl"
+					className="h-11 w-full border-violet-600 bg-violet-600 text-white shadow-none hover:bg-violet-700"
+					loading={forgot.isPending}
 				>
-					<FormField label="Email" htmlFor="email" error={error}>
-						<Input
-							id="email"
-							type="email"
-							autoComplete="email"
-							placeholder="you@company.com"
-							value={email}
-							onChange={(e) => {
-								setEmail(e.target.value);
-								setError("");
-							}}
-							aria-invalid={Boolean(error)}
-						/>
-					</FormField>
-					<Button type="submit" className="w-full" loading={forgot.isPending}>
-						Send reset code
-					</Button>
-				</form>
-			</CardPanel>
-			<div className="border-t px-6 py-4 text-center text-muted-foreground text-sm">
+					Send reset code
+				</Button>
+			</form>
+
+			<div className="mt-8 text-center text-slate-600 text-sm">
 				Remembered it?{" "}
 				<Link
 					href="/auth/login"
-					className="font-medium text-foreground hover:underline"
+					className="font-semibold text-violet-600 hover:text-violet-700"
 				>
 					Sign in
 				</Link>
 			</div>
-		</Card>
+		</div>
 	);
 }

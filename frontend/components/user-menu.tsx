@@ -53,7 +53,7 @@ export function UserMenu(): React.ReactElement | null {
 				render={
 					<SidebarMenuButton
 						size="lg"
-						className="data-[popup-open]:bg-sidebar-accent"
+						className="data-popup-open:bg-sidebar-accent"
 					/>
 				}
 			>

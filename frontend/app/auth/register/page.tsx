@@ -6,20 +6,13 @@ import { useState } from "react";
 
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardDescription,
-	CardHeader,
-	CardPanel,
-	CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useRegister } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { toast } from "@/lib/toast";
 import { registerFormSchema } from "@/lib/validation";
 
-const EMPTY = { firstName: "", lastName: "", email: "", password: "" };
+const EMPTY = { name: "", email: "", password: "" };
 
 export default function RegisterPage(): React.ReactElement {
 	const router = useRouter();
@@ -35,11 +28,20 @@ export default function RegisterPage(): React.ReactElement {
 
 	function handleSubmit(event: React.FormEvent): void {
 		event.preventDefault();
-		const parsed = registerFormSchema.safeParse(values);
+		const parts = values.name.trim().split(/\s+/).filter(Boolean);
+		const formValues = {
+			firstName: parts[0] ?? "",
+			lastName: parts.slice(1).join(" "),
+			email: values.email,
+			password: values.password,
+		};
+		const parsed = registerFormSchema.safeParse(formValues);
 		if (!parsed.success) {
 			const next: Record<string, string> = {};
 			for (const issue of parsed.error.issues) {
-				next[String(issue.path[0])] = issue.message;
+				const field = String(issue.path[0]);
+				next[field === "firstName" || field === "lastName" ? "name" : field] =
+					field === "lastName" ? "Enter first and last name" : issue.message;
 			}
 			setErrors(next);
 			return;
@@ -49,7 +51,7 @@ export default function RegisterPage(): React.ReactElement {
 			onSuccess: () => {
 				toast.success(
 					"Account created",
-					"We’ve emailed you a 6-digit verification code.",
+					"We've emailed you a 6-digit verification code.",
 				);
 				router.replace("/auth/verify-email");
 			},
@@ -60,111 +62,99 @@ export default function RegisterPage(): React.ReactElement {
 						return;
 					}
 					if (Object.keys(err.fieldErrors).length) {
-						setErrors(err.fieldErrors);
+						setErrors({
+							...err.fieldErrors,
+							name:
+								err.fieldErrors.firstName ??
+								err.fieldErrors.lastName ??
+								err.fieldErrors.name,
+						});
 						return;
 					}
 				}
-				toast.fromError(err, "Couldn’t create your account");
+				toast.fromError(err, "Couldn't create your account");
 			},
 		});
 	}
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Create your account</CardTitle>
-				<CardDescription>
-					Get started managing fire-safety compliance.
-				</CardDescription>
-			</CardHeader>
-			<CardPanel>
-				<form
-					className="flex flex-col gap-4"
-					onSubmit={handleSubmit}
-					noValidate
+		<div>
+			<div>
+				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+					Sign up
+				</h1>
+				<p className="mt-3 text-base text-slate-600">
+					Start your 30-day free trial.
+				</p>
+			</div>
+
+			<form className="mt-9 flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
+				<FormField label="Name" htmlFor="name" error={errors.name} required>
+					<Input
+						id="name"
+						autoComplete="name"
+						placeholder="Enter your name"
+						size="lg"
+						value={values.name}
+						onChange={(e) => update("name", e.target.value)}
+						aria-invalid={Boolean(errors.name)}
+						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+					/>
+				</FormField>
+
+				<FormField label="Email" htmlFor="email" error={errors.email} required>
+					<Input
+						id="email"
+						type="email"
+						autoComplete="email"
+						placeholder="Enter your email"
+						size="lg"
+						value={values.email}
+						onChange={(e) => update("email", e.target.value)}
+						aria-invalid={Boolean(errors.email)}
+						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+					/>
+				</FormField>
+
+				<FormField
+					label="Password"
+					htmlFor="password"
+					error={errors.password}
+					hint="Must be at least 8 characters."
+					required
 				>
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<FormField
-							label="First name"
-							htmlFor="firstName"
-							error={errors.firstName}
-							required
-						>
-							<Input
-								id="firstName"
-								autoComplete="given-name"
-								placeholder="Ada"
-								value={values.firstName}
-								onChange={(e) => update("firstName", e.target.value)}
-								aria-invalid={Boolean(errors.firstName)}
-							/>
-						</FormField>
-						<FormField
-							label="Last name"
-							htmlFor="lastName"
-							error={errors.lastName}
-							required
-						>
-							<Input
-								id="lastName"
-								autoComplete="family-name"
-								placeholder="Lovelace"
-								value={values.lastName}
-								onChange={(e) => update("lastName", e.target.value)}
-								aria-invalid={Boolean(errors.lastName)}
-							/>
-						</FormField>
-					</div>
+					<Input
+						id="password"
+						type="password"
+						autoComplete="new-password"
+						placeholder="Create a password"
+						size="lg"
+						value={values.password}
+						onChange={(e) => update("password", e.target.value)}
+						aria-invalid={Boolean(errors.password)}
+						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+					/>
+				</FormField>
 
-					<FormField
-						label="Email"
-						htmlFor="email"
-						error={errors.email}
-						required
-					>
-						<Input
-							id="email"
-							type="email"
-							autoComplete="email"
-							placeholder="you@company.com"
-							value={values.email}
-							onChange={(e) => update("email", e.target.value)}
-							aria-invalid={Boolean(errors.email)}
-						/>
-					</FormField>
+				<Button
+					type="submit"
+					size="xl"
+					className="mt-1 h-11 w-full border-violet-600 bg-violet-600 text-white shadow-none hover:bg-violet-700"
+					loading={register.isPending}
+				>
+					Get started
+				</Button>
+			</form>
 
-					<FormField
-						label="Password"
-						htmlFor="password"
-						error={errors.password}
-						hint="At least 8 characters."
-						required
-					>
-						<Input
-							id="password"
-							type="password"
-							autoComplete="new-password"
-							placeholder="••••••••"
-							value={values.password}
-							onChange={(e) => update("password", e.target.value)}
-							aria-invalid={Boolean(errors.password)}
-						/>
-					</FormField>
-
-					<Button type="submit" className="w-full" loading={register.isPending}>
-						Create account
-					</Button>
-				</form>
-			</CardPanel>
-			<div className="border-t px-6 py-4 text-center text-muted-foreground text-sm">
+			<div className="mt-24 text-center text-slate-600 text-sm">
 				Already have an account?{" "}
 				<Link
 					href="/auth/login"
-					className="font-medium text-foreground hover:underline"
+					className="font-semibold text-violet-600 hover:text-violet-700"
 				>
-					Sign in
+					Log in
 				</Link>
 			</div>
-		</Card>
+		</div>
 	);
 }
