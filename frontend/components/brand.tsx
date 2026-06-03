@@ -6,9 +6,11 @@ import { cn } from "@/lib/utils";
 export function Brand({
 	className,
 	iconOnly = false,
+	showSubtitle = true,
 }: {
 	className?: string;
 	iconOnly?: boolean;
+	showSubtitle?: boolean;
 }): React.ReactElement {
 	return (
 		<span className={cn("flex items-center gap-2", className)}>
@@ -20,9 +22,11 @@ export function Brand({
 					<span className="font-heading font-semibold text-sm">
 						TZW Fire Safety
 					</span>
-					<span className="text-muted-foreground text-xs">
-						Extinguisher Management
-					</span>
+					{showSubtitle && (
+						<span className="text-muted-foreground text-xs">
+							Extinguisher Management
+						</span>
+					)}
 				</span>
 			)}
 		</span>

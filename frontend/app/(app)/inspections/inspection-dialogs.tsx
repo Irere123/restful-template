@@ -99,7 +99,7 @@ function ScheduleForm({
 	}
 
 	return (
-		<form onSubmit={handleSubmit} noValidate>
+		<form onSubmit={handleSubmit} noValidate className="contents">
 			<DialogHeader>
 				<DialogTitle>Schedule inspection</DialogTitle>
 				<DialogDescription>
@@ -248,7 +248,7 @@ function CompleteForm({
 	}
 
 	return (
-		<form onSubmit={handleSubmit} noValidate>
+		<form onSubmit={handleSubmit} noValidate className="contents">
 			<DialogHeader>
 				<DialogTitle>Record inspection result</DialogTitle>
 				<DialogDescription>
@@ -359,7 +359,7 @@ function RescheduleForm({
 	}
 
 	return (
-		<form onSubmit={handleSubmit} noValidate>
+		<form onSubmit={handleSubmit} noValidate className="contents">
 			<DialogHeader>
 				<DialogTitle>Reschedule inspection</DialogTitle>
 				<DialogDescription>Change the date, time or notes.</DialogDescription>

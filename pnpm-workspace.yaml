@@ -1,7 +1,7 @@
 packages:
   - 'services/*'
   - 'packages/*'
-  - "frontend"
+  - "frontend/"
 
 allowBuilds:
   '@scarf/scarf': false

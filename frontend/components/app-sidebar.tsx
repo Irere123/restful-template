@@ -6,7 +6,6 @@ import {
 	ClipboardCheckIcon,
 	FireExtinguisherIcon,
 	LayoutDashboardIcon,
-	SettingsIcon,
 	UsersIcon,
 	WrenchIcon,
 } from "lucide-react";
@@ -26,6 +25,7 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
+	SidebarTrigger,
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { UserMenu } from "@/components/user-menu";
@@ -52,10 +52,6 @@ const PRIMARY_NAV: NavItem[] = [
 
 const ADMIN_NAV: NavItem[] = [
 	{ title: "Users", href: "/users", icon: UsersIcon, adminOnly: true },
-];
-
-const ACCOUNT_NAV: NavItem[] = [
-	{ title: "Settings", href: "/settings", icon: SettingsIcon },
 ];
 
 function NavMenu({ items }: { items: NavItem[] }): React.ReactElement {
@@ -91,12 +87,12 @@ export function AppSidebar(): React.ReactElement {
 	return (
 		<Sidebar collapsible="icon">
 			<SidebarHeader>
-				<div className="flex h-10 items-center px-1 group-data-[collapsible=icon]:justify-center">
-					<Brand className="group-data-[collapsible=icon]:hidden" />
+				<div className="flex h-10 items-center gap-2 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
 					<Brand
-						iconOnly
-						className="hidden group-data-[collapsible=icon]:flex"
+						showSubtitle={false}
+						className="group-data-[collapsible=icon]:hidden"
 					/>
+					<SidebarTrigger className="ms-auto group-data-[collapsible=icon]:ms-0" />
 				</div>
 			</SidebarHeader>
 
@@ -115,12 +111,6 @@ export function AppSidebar(): React.ReactElement {
 						</SidebarGroupContent>
 					</SidebarGroup>
 				)}
-
-				<SidebarGroup className="mt-auto">
-					<SidebarGroupContent>
-						<NavMenu items={ACCOUNT_NAV} />
-					</SidebarGroupContent>
-				</SidebarGroup>
 			</SidebarContent>
 
 			<SidebarFooter>

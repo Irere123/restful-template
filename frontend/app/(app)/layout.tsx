@@ -61,8 +61,8 @@ export default function AppLayout({
 			<AppSidebar />
 			<SidebarInset>
 				<header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-sm">
-					<SidebarTrigger />
-					<Separator orientation="vertical" className="h-5" />
+					<SidebarTrigger className="md:hidden" />
+					<Separator orientation="vertical" className="h-5 md:hidden" />
 					<span className="font-heading font-semibold text-sm">
 						{sectionTitle(pathname)}
 					</span>

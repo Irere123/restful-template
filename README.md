@@ -152,6 +152,31 @@ Everything is reachable through the gateway at **http://localhost:8080**.
 | http://localhost:8083/docs         | Reporting API docs                              |
 | http://localhost:8084/docs         | Notification API docs (internal)                |
 
+### 5. Seed development data (optional)
+
+Load three ready-made test accounts (one per role) plus a small set of
+extinguishers, inspections and maintenance logs so every screen has content:
+
+```bash
+pnpm db:seed
+```
+
+| Email                | Password      | Role        | Can…                                                          |
+| -------------------- | ------------- | ----------- | ------------------------------------------------------------- |
+| `admin@tzw.test`     | `Password123` | `admin`     | Everything — manage users & roles, delete any record          |
+| `inspector@tzw.test` | `Password123` | `inspector` | Register/edit extinguishers, complete inspections, log maintenance |
+| `user@tzw.test`      | `Password123` | `user`      | Read-only + schedule inspections                              |
+
+All three have verified emails (no OTP step). The seed is **idempotent** — users
+are upserted by email and the sample assets (ids prefixed `seed-`) are replaced
+on each run. It loads `scripts/seed-dev.sql` into the `fire_auth_service` and
+`fire_management_service` databases. **Development only** — never run it against
+production data.
+
+The sample assets include expired and soon-to-expire units and an overdue
+inspection, so the dashboard, reports and alerts all show realistic data
+(compliance ≈ 71%).
+
 ---
 
 ## API overview (via the gateway)

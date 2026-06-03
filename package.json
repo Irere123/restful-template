@@ -11,6 +11,7 @@
 		"db:setup": "psql -d postgresql://postgres:postgres@localhost:5432/postgres -f scripts/setup-db.sql",
 		"db:generate": "pnpm --filter auth --filter management --filter notification db:generate",
 		"db:migrate": "pnpm --filter auth --filter management --filter notification db:migrate",
+		"db:seed": "psql -d postgresql://postgres:postgres@localhost:5432/fire_auth_service -f scripts/seed-dev.sql",
 		"db:backup": "bash scripts/backup-db.sh",
 		"format": "biome format --write ."
 	},

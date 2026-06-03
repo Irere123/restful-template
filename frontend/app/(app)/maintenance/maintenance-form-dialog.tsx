@@ -91,7 +91,7 @@ function MaintenanceForm({
 	}
 
 	return (
-		<form onSubmit={handleSubmit} noValidate>
+		<form onSubmit={handleSubmit} noValidate className="contents">
 			<DialogHeader>
 				<DialogTitle>Log maintenance</DialogTitle>
 				<DialogDescription>
