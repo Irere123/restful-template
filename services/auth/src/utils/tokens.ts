@@ -8,7 +8,7 @@ import type {
 } from "@repo/core";
 import { ApiError } from "@repo/core";
 import type { CookieOptions, Response } from "express";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 export type AuthTokens = {
 	accessToken: string;

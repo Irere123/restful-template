@@ -5,7 +5,13 @@
 	"main": "index.js",
 	"scripts": {
 		"dev": "turbo dev",
+		"dev:backend": "turbo dev --filter=gateway --filter=auth --filter=management --filter=reporting --filter=notification",
 		"build": "turbo build",
+		"check-types": "turbo check-types",
+		"db:setup": "psql -d postgresql://postgres:postgres@localhost:5432/postgres -f scripts/setup-db.sql",
+		"db:generate": "pnpm --filter auth --filter management --filter notification db:generate",
+		"db:migrate": "pnpm --filter auth --filter management --filter notification db:migrate",
+		"db:backup": "bash scripts/backup-db.sh",
 		"format": "biome format --write ."
 	},
 	"keywords": [],
