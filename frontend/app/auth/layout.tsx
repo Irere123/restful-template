@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Mail, Star } from "lucide-react";
+import { Mail, Star } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -96,19 +96,6 @@ export default function AuthLayout({
 					</div>
 				</div>
 
-				{mode === "register" && (
-					<div className="absolute bottom-[292px] left-0 right-0 flex items-center justify-center gap-16 text-slate-500">
-						<ChevronLeft className="size-5" />
-						<div className="flex items-center gap-4">
-							<span className="size-2.5 rounded-full bg-violet-600" />
-							<span className="size-2.5 rounded-full bg-slate-200" />
-							<span className="size-2.5 rounded-full bg-slate-200" />
-							<span className="size-2.5 rounded-full bg-slate-200" />
-						</div>
-						<ChevronRight className="size-5" />
-					</div>
-				)}
-
 				<div className="flex items-center justify-between text-slate-600 text-sm">
 					<span>&copy; TZW Fire Safety</span>
 					{mode === "register" && (
@@ -128,7 +115,7 @@ export default function AuthLayout({
 					<Brand />
 				</div>
 				<main className="flex flex-1 items-center justify-center py-12">
-					<div className="w-full max-w-[360px]">{children}</div>
+					<div className="w-full max-w-90">{children}</div>
 				</main>
 				<p className="text-center text-slate-500 text-sm lg:hidden">
 					&copy; TZW Fire Safety
