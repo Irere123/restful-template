@@ -115,7 +115,7 @@ export default function ExtinguishersPage(): React.ReactElement {
 				}
 			/>
 
-			<div className="flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-xs/5 sm:flex-row sm:items-center">
+			<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 				<div className="min-w-0 flex-1 sm:max-w-md">
 					<InputGroup className="h-10 rounded-lg bg-background shadow-none sm:h-9">
 						<InputGroupAddon>
@@ -123,18 +123,35 @@ export default function ExtinguishersPage(): React.ReactElement {
 						</InputGroupAddon>
 						<InputGroupInput
 							type="search"
-						placeholder="Search serial or location…"
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-					/>
+							placeholder="Search serial or location"
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+							aria-label="Search by serial number or location"
+						/>
+						{search && (
+							<InputGroupAddon align="inline-end">
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-xs"
+									aria-label="Clear search"
+									onClick={() => setSearch("")}
+								>
+									<XIcon />
+								</Button>
+							</InputGroupAddon>
+						)}
+					</InputGroup>
 				</div>
-				<div className="flex gap-2 sm:ms-auto">
+				<div className="flex flex-wrap items-center justify-end gap-2 sm:ms-auto">
 					<FilterSelect
 						value={status}
 						onChange={setStatus}
 						options={statusOptions}
 						allLabel="All statuses"
 						ariaLabel="Filter by status"
+						size="default"
+						className="w-40"
 					/>
 					<FilterSelect
 						value={type}
@@ -142,6 +159,8 @@ export default function ExtinguishersPage(): React.ReactElement {
 						options={typeOptions}
 						allLabel="All types"
 						ariaLabel="Filter by type"
+						size="default"
+						className="w-36"
 					/>
 				</div>
 			</div>
