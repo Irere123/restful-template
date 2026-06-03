@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FormField } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
+import { ThemeSegmentedControl } from "@/components/theme-controls";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -312,6 +313,25 @@ function DangerCard(): React.ReactElement {
 	);
 }
 
+function AppearanceCard(): React.ReactElement {
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle className="text-base">Appearance</CardTitle>
+				<CardDescription>
+					Choose how the interface should render on this device.
+				</CardDescription>
+			</CardHeader>
+			<CardPanel className="space-y-3">
+				<ThemeSegmentedControl />
+				<p className="text-muted-foreground text-sm">
+					System follows your operating system theme preference.
+				</p>
+			</CardPanel>
+		</Card>
+	);
+}
+
 export default function SettingsPage(): React.ReactElement {
 	return (
 		<div className="mx-auto w-full max-w-2xl space-y-5">
@@ -322,11 +342,15 @@ export default function SettingsPage(): React.ReactElement {
 			<Tabs defaultValue="profile">
 				<TabsList>
 					<TabsTab value="profile">Profile</TabsTab>
+					<TabsTab value="appearance">Appearance</TabsTab>
 					<TabsTab value="password">Password</TabsTab>
 					<TabsTab value="account">Account</TabsTab>
 				</TabsList>
 				<TabsPanel value="profile" className="pt-2">
 					<ProfileCard />
+				</TabsPanel>
+				<TabsPanel value="appearance" className="pt-2">
+					<AppearanceCard />
 				</TabsPanel>
 				<TabsPanel value="password" className="pt-2">
 					<PasswordCard />

@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/components/providers/auth-provider";
+import { ThemeMenuRadioGroup } from "@/components/theme-controls";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
 	Menu,
@@ -96,6 +97,8 @@ export function UserMenu(): React.ReactElement | null {
 					<HugeiconsIcon icon={Settings02Icon} />
 					Account settings
 				</MenuItem>
+				<MenuSeparator />
+				<ThemeMenuRadioGroup />
 				{!user.emailVerified && (
 					<MenuItem render={<Link href="/auth/verify-email" />}>
 						<HugeiconsIcon icon={Mail01Icon} />
