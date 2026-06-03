@@ -15,6 +15,7 @@ export type CreateUserInput = {
 	displayName: string;
 	username?: string | null;
 	role?: UserRole;
+	emailVerified?: Date | null;
 };
 
 /** Fields that may be updated on an existing user. */

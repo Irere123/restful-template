@@ -30,6 +30,13 @@ export interface RegisterInput {
 	password: string;
 }
 
+export interface CreateManagedUserInput {
+	firstName: string;
+	lastName: string;
+	email: string;
+	role: UserRole;
+}
+
 export interface LoginInput {
 	email: string;
 	password: string;

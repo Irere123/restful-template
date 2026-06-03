@@ -73,6 +73,14 @@ export const updateUserRoleSchema = z.object({
 	role: z.enum(USER_ROLES),
 });
 
+/** Admin-only: create a managed account and send password setup email. */
+export const adminCreateUserSchema = z.object({
+	firstName: nameSchema,
+	lastName: nameSchema,
+	email: emailSchema,
+	role: z.enum(USER_ROLES).default("inspector"),
+});
+
 /** Shape of a user as returned by the API (password hash stripped). */
 export const publicUserSchema = z.object({
 	id: z.string(),

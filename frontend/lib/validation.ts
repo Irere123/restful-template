@@ -63,6 +63,13 @@ export const registerFormSchema = z.object({
 	password: passwordSchema,
 });
 
+export const createManagedUserFormSchema = z.object({
+	firstName: nameSchema,
+	lastName: nameSchema,
+	email: emailSchema,
+	role: z.enum(["user", "inspector", "admin"]),
+});
+
 export const forgotPasswordFormSchema = z.object({
 	email: emailSchema,
 });

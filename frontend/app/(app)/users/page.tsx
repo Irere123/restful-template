@@ -3,6 +3,7 @@
 import {
 	CircleCheckIcon,
 	EllipsisIcon,
+	PlusIcon,
 	ShieldIcon,
 	Trash2Icon,
 	UsersIcon,
@@ -11,12 +12,24 @@ import { useState } from "react";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { DataState } from "@/components/data-state";
+import { FormField } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
 import { RoleBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogClose,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogPanel,
+	DialogPopup,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
 	Empty,
 	EmptyDescription,
@@ -42,10 +55,17 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { ApiError } from "@/lib/api/client";
 import { USER_ROLES, type User, type UserRole } from "@/lib/api/types";
-import { useDeleteUser, useUpdateUserRole, useUsers } from "@/lib/api/users";
+import {
+	useCreateUser,
+	useDeleteUser,
+	useUpdateUserRole,
+	useUsers,
+} from "@/lib/api/users";
 import { formatDate, labelForRole } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { createManagedUserFormSchema } from "@/lib/validation";
 
 export default function UsersPage(): React.ReactElement {
 	const { isAdmin, user: currentUser } = useAuth();
@@ -53,6 +73,7 @@ export default function UsersPage(): React.ReactElement {
 	const updateRole = useUpdateUserRole();
 	const remove = useDeleteUser();
 	const [deleteTarget, setDeleteTarget] = useState<User | undefined>();
+	const [createOpen, setCreateOpen] = useState(false);
 
 	if (!isAdmin) {
 		return (
@@ -101,6 +122,12 @@ export default function UsersPage(): React.ReactElement {
 			<PageHeader
 				title="Users"
 				description="Manage accounts and roles across the organization."
+				actions={
+					<Button onClick={() => setCreateOpen(true)}>
+						<PlusIcon />
+						Register inspector
+					</Button>
+				}
 			/>
 
 			<Card className="overflow-hidden rounded-lg">
@@ -212,6 +239,165 @@ export default function UsersPage(): React.ReactElement {
 				loading={remove.isPending}
 				onConfirm={confirmDelete}
 			/>
+			<CreateInspectorDialog open={createOpen} onOpenChange={setCreateOpen} />
 		</div>
+	);
+}
+
+function CreateInspectorDialog({
+	open,
+	onOpenChange,
+}: {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+}): React.ReactElement {
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogPopup className="max-w-lg">
+				{open && <CreateInspectorForm onDone={() => onOpenChange(false)} />}
+			</DialogPopup>
+		</Dialog>
+	);
+}
+
+function CreateInspectorForm({
+	onDone,
+}: {
+	onDone: () => void;
+}): React.ReactElement {
+	const create = useCreateUser();
+	const [values, setValues] = useState({
+		firstName: "",
+		lastName: "",
+		email: "",
+	});
+	const [errors, setErrors] = useState<Record<string, string>>({});
+
+	function set<K extends keyof typeof values>(
+		key: K,
+		value: (typeof values)[K],
+	): void {
+		setValues((v) => ({ ...v, [key]: value }));
+		setErrors((e) => ({ ...e, [key]: "" }));
+	}
+
+	function handleSubmit(event: React.FormEvent): void {
+		event.preventDefault();
+		const parsed = createManagedUserFormSchema.safeParse({
+			...values,
+			role: "inspector",
+		});
+		if (!parsed.success) {
+			const next: Record<string, string> = {};
+			for (const issue of parsed.error.issues) {
+				next[String(issue.path[0])] = issue.message;
+			}
+			setErrors(next);
+			return;
+		}
+
+		create.mutate(parsed.data, {
+			onSuccess: ({ user, resetEmailSent }) => {
+				if (resetEmailSent) {
+					toast.success(
+						"Inspector registered",
+						`${user.displayName} has been emailed a password setup code.`,
+					);
+				} else {
+					toast.warning(
+						"Inspector registered",
+						"Send them to Forgot password so they can request a setup code.",
+					);
+				}
+				onDone();
+			},
+			onError: (err) => {
+				if (err instanceof ApiError) {
+					if (err.status === 409) {
+						setErrors({ email: "An account with this email already exists" });
+						return;
+					}
+					if (Object.keys(err.fieldErrors).length) {
+						setErrors(err.fieldErrors);
+						return;
+					}
+				}
+				toast.fromError(err, "Couldn't register inspector");
+			},
+		});
+	}
+
+	return (
+		<form onSubmit={handleSubmit} noValidate className="contents">
+			<DialogHeader>
+				<DialogTitle>Register inspector</DialogTitle>
+				<DialogDescription>
+					Create an inspector account and email them a code to set their
+					password before signing in.
+				</DialogDescription>
+			</DialogHeader>
+			<DialogPanel className="space-y-4">
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<FormField
+						label="First name"
+						htmlFor="inspectorFirstName"
+						error={errors.firstName}
+						required
+					>
+						<Input
+							id="inspectorFirstName"
+							autoComplete="given-name"
+							placeholder="Pippa"
+							value={values.firstName}
+							onChange={(e) => set("firstName", e.target.value)}
+							aria-invalid={Boolean(errors.firstName)}
+						/>
+					</FormField>
+					<FormField
+						label="Last name"
+						htmlFor="inspectorLastName"
+						error={errors.lastName}
+						required
+					>
+						<Input
+							id="inspectorLastName"
+							autoComplete="family-name"
+							placeholder="Wilkinson"
+							value={values.lastName}
+							onChange={(e) => set("lastName", e.target.value)}
+							aria-invalid={Boolean(errors.lastName)}
+						/>
+					</FormField>
+				</div>
+				<FormField
+					label="Email"
+					htmlFor="inspectorEmail"
+					error={errors.email}
+					required
+					hint="They will receive a password setup code at this address."
+				>
+					<Input
+						id="inspectorEmail"
+						type="email"
+						autoComplete="email"
+						placeholder="inspector@company.com"
+						value={values.email}
+						onChange={(e) => set("email", e.target.value)}
+						aria-invalid={Boolean(errors.email)}
+					/>
+				</FormField>
+			</DialogPanel>
+			<DialogFooter>
+				<DialogClose
+					disabled={create.isPending}
+					render={<Button variant="outline" />}
+				>
+					Cancel
+				</DialogClose>
+				<Button type="submit" loading={create.isPending}>
+					Register inspector
+				</Button>
+			</DialogFooter>
+		</form>
 	);
 }

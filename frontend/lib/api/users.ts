@@ -9,10 +9,11 @@ import {
 
 import { apiFetch } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/keys";
-import type { User, UserRole } from "@/lib/api/types";
+import type { CreateManagedUserInput, User, UserRole } from "@/lib/api/types";
 
 type ListResponse = { users: User[] };
 type OneResponse = { user: User };
+type CreateResponse = { user: User; resetEmailSent: boolean };
 
 /** Admin-only: list every account. */
 export function useUsers(): UseQueryResult<User[]> {
@@ -33,6 +34,17 @@ export function useUpdateUserRole() {
 				method: "PATCH",
 				body: { role },
 			}),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: queryKeys.users.all });
+		},
+	});
+}
+
+export function useCreateUser() {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: (input: CreateManagedUserInput) =>
+			apiFetch<CreateResponse>("/users", { method: "POST", body: input }),
 		onSuccess: () => {
 			qc.invalidateQueries({ queryKey: queryKeys.users.all });
 		},

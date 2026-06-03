@@ -1,16 +1,22 @@
 import {
+	createUser,
 	deleteUser,
+	getUserByEmail,
 	getUserById,
 	listUsers,
 	revokeRefreshTokens,
 	updateUser,
 } from "@auth/db/queries";
+import { issuePasswordReset } from "@auth/lib/password-reset";
+import { hashPassword } from "@auth/lib/password";
+import logger from "@auth/logger";
 import { sendAccountDeletedEmail } from "@auth/lib/notifications";
 import { requireAuth, requireRole } from "@auth/middleware/auth";
-import { updateUserRoleSchema } from "@auth/schemas/auth";
+import { adminCreateUserSchema, updateUserRoleSchema } from "@auth/schemas/auth";
 import { parse } from "@auth/utils/parse";
 import { sanitizeUser } from "@auth/utils/sanitize-user";
-import { ApiError, asyncHandler } from "@repo/core";
+import { ApiError, asyncHandler, generateId } from "@repo/core";
+import { randomBytes } from "node:crypto";
 import { Router } from "express";
 
 const getIdParam = (raw: unknown): string => {
@@ -34,6 +40,47 @@ export const createUsersRouter = (): Router => {
 		asyncHandler(async (_req, res) => {
 			const all = await listUsers();
 			res.json({ users: all.map(sanitizeUser) });
+		}),
+	);
+
+	router.post(
+		"/",
+		asyncHandler(async (req, res) => {
+			const { firstName, lastName, email, role } = parse(
+				adminCreateUserSchema,
+				req.body,
+			);
+
+			if (await getUserByEmail(email)) {
+				throw new ApiError({
+					code: "CONFLICT",
+					message: "An account with this email already exists",
+				});
+			}
+
+			const user = await createUser({
+				id: await generateId(),
+				email,
+				password: await hashPassword(randomBytes(32).toString("base64url")),
+				firstName,
+				lastName,
+				displayName: `${firstName} ${lastName}`,
+				role,
+				emailVerified: new Date(),
+			});
+
+			let resetEmailSent = true;
+			try {
+				await issuePasswordReset(user);
+			} catch (err) {
+				resetEmailSent = false;
+				logger.error("Failed to send password setup email for managed user", {
+					userId: user.id,
+					error: err instanceof Error ? err.message : String(err),
+				});
+			}
+
+			res.status(201).json({ user: sanitizeUser(user), resetEmailSent });
 		}),
 	);
 

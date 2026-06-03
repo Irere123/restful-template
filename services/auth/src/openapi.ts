@@ -1,4 +1,5 @@
 import {
+	adminCreateUserSchema,
 	changePasswordSchema,
 	forgotPasswordSchema,
 	loginSchema,
@@ -34,6 +35,7 @@ const components = {
 		VerifyEmailRequest: toSchema(verifyEmailSchema),
 		ForgotPasswordRequest: toSchema(forgotPasswordSchema),
 		ResetPasswordRequest: toSchema(resetPasswordSchema),
+		AdminCreateUserRequest: toSchema(adminCreateUserSchema),
 		UpdateUserRoleRequest: toSchema(updateUserRoleSchema),
 		User: userSchema,
 		Error: {
@@ -279,6 +281,33 @@ const paths = {
 				},
 				401: errorResponse("Not authenticated"),
 				403: errorResponse("Not an admin"),
+			},
+		},
+		post: {
+			tags: ["Users"],
+			summary: "Create a managed user and send a password setup code",
+			security: [{ cookieAuth: [] }],
+			requestBody: jsonBody("AdminCreateUserRequest"),
+			responses: {
+				201: {
+					description: "User created",
+					content: {
+						"application/json": {
+							schema: {
+								type: "object",
+								properties: {
+									user: ref("User"),
+									resetEmailSent: { type: "boolean" },
+								},
+								required: ["user", "resetEmailSent"],
+							},
+						},
+					},
+				},
+				400: errorResponse("Validation failed"),
+				401: errorResponse("Not authenticated"),
+				403: errorResponse("Not an admin"),
+				409: errorResponse("Email already in use"),
 			},
 		},
 	},
