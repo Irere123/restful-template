@@ -16,11 +16,5 @@
 		"@biomejs/biome": "^2.4.16",
 		"turbo": "^2.9.16"
 	},
-	"packageManager": "pnpm@11.5.0",
-	"pnpm": {
-		"overrides": {
-			"@types/react": "19.2.16",
-			"@types/react-dom": "19.2.3"
-		}
-	}
+	"packageManager": "pnpm@11.5.0"
 }

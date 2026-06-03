@@ -1,13 +1,35 @@
 {
-  "name": "gateway",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module"
+	"name": "gateway",
+	"version": "1.0.0",
+	"description": "API Gateway — single public entry point that reverse-proxies to the auth, management and reporting services and serves aggregated Swagger docs.",
+	"main": "src/index.ts",
+	"type": "module",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"start": "tsx src/index.ts",
+		"build": "tsc --noEmit",
+		"check-types": "tsc --noEmit",
+		"lint": "eslint src"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@repo/core": "workspace:*",
+		"cors": "^2.8.6",
+		"express": "^5.2.1",
+		"helmet": "^8.2.0",
+		"http-proxy-middleware": "^3.0.5",
+		"swagger-ui-express": "^5.0.1"
+	},
+	"devDependencies": {
+		"@repo/eslint-config": "workspace:*",
+		"@repo/tsconfig": "workspace:*",
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.6",
+		"@types/swagger-ui-express": "^4.1.8",
+		"eslint": "^10.4.1",
+		"tsx": "^4.22.3",
+		"typescript": "^6.0.3"
+	}
 }

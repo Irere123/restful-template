@@ -8,3 +8,11 @@ allowBuilds:
   esbuild: false
   sharp: true
   unrs-resolver: true
+
+# Pin a single @types/react across the monorepo. The frontend uses React 19
+# while the backend email services use React 18 at runtime; without this the
+# two @types/react versions clash inside @react-email's component types
+# (React 19's ReactNode adds `bigint`), breaking the email .tsx typechecks.
+overrides:
+  '@types/react': 19.2.16
+  '@types/react-dom': 19.2.3
