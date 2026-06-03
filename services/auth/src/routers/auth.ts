@@ -1,7 +1,3 @@
-import { asyncHandler, createAuthRateLimiter, generateId } from "@repo/core";
-import { ApiError } from "@repo/core";
-import { Router } from "express";
-
 import {
 	createUser,
 	deleteUser,
@@ -9,6 +5,7 @@ import {
 	getUserById,
 	getUserByUsername,
 	revokeRefreshTokens,
+	type UpdateUserInput,
 	updateUser,
 } from "@auth/db/queries";
 import {
@@ -46,6 +43,13 @@ import {
 	sendAuthCookies,
 	setTokenCookies,
 } from "@auth/utils/tokens";
+import {
+	ApiError,
+	asyncHandler,
+	createAuthRateLimiter,
+	generateId,
+} from "@repo/core";
+import { Router } from "express";
 
 /** Best-effort request metadata for security (sign-in/out) alert emails. */
 const getClientContext = (req: {
@@ -73,7 +77,7 @@ export const createAuthRouter = (): Router => {
 		"/register",
 		authRateLimiter,
 		asyncHandler(async (req, res) => {
-			const { email, password, displayName, username } = parse(
+			const { firstName, lastName, email, password } = parse(
 				registerSchema,
 				req.body,
 			);
@@ -84,19 +88,14 @@ export const createAuthRouter = (): Router => {
 					message: "An account with this email already exists",
 				});
 			}
-			if (username && (await getUserByUsername(username))) {
-				throw new ApiError({
-					code: "CONFLICT",
-					message: "This username is already taken",
-				});
-			}
 
 			const user = await createUser({
 				id: await generateId(),
 				email,
 				password: await hashPassword(password),
-				displayName,
-				username: username ?? null,
+				firstName,
+				lastName,
+				displayName: `${firstName} ${lastName}`,
 			});
 
 			// Kick off email verification. Don't fail registration if the email
@@ -234,7 +233,19 @@ export const createAuthRouter = (): Router => {
 				}
 			}
 
-			const user = await updateUser(req.userId!, updates);
+			// Keep the denormalized full name in sync when either part changes.
+			const named: UpdateUserInput = { ...updates };
+			if (updates.firstName !== undefined || updates.lastName !== undefined) {
+				const current = req.user ?? (await getUserById(req.userId!));
+				if (!current) {
+					throw new ApiError({ code: "UNAUTHORIZED" });
+				}
+				const firstName = updates.firstName ?? current.firstName;
+				const lastName = updates.lastName ?? current.lastName;
+				named.displayName = `${firstName} ${lastName}`;
+			}
+
+			const user = await updateUser(req.userId!, named);
 			if (!user) {
 				throw new ApiError({ code: "NOT_FOUND", message: "User not found" });
 			}
@@ -302,10 +313,7 @@ export const createAuthRouter = (): Router => {
 		"/reset-password",
 		authRateLimiter,
 		asyncHandler(async (req, res) => {
-			const { email, code, newPassword } = parse(
-				resetPasswordSchema,
-				req.body,
-			);
+			const { email, code, newPassword } = parse(resetPasswordSchema, req.body);
 
 			const user = await getUserByEmail(email);
 			if (!user) {

@@ -10,6 +10,8 @@ export type CreateUserInput = {
 	id: string;
 	email: string;
 	password: string;
+	firstName: string;
+	lastName: string;
 	displayName: string;
 	username?: string | null;
 	role?: UserRole;
@@ -19,6 +21,8 @@ export type CreateUserInput = {
 export type UpdateUserInput = {
 	email?: string;
 	password?: string;
+	firstName?: string;
+	lastName?: string;
 	displayName?: string;
 	username?: string | null;
 	role?: UserRole;

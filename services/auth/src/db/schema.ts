@@ -12,12 +12,14 @@ export const userRoleEnum = pgEnum("user_role", ["user", "inspector", "admin"]);
 export const users = pgTable("users", {
 	id: text("id").primaryKey(),
 	username: text("username").unique(),
+	firstName: text("first_name").notNull(),
+	lastName: text("last_name").notNull(),
+	// Human-readable full name, derived server-side from first + last name. Kept
+	// denormalized so emails and other services have a ready label to address.
 	displayName: text("display_name").notNull(),
 	email: text("email").notNull().unique(),
 	password: text("password").notNull(),
 	role: userRoleEnum("role").notNull().default("user"),
-	// Null until the user confirms their email via an OTP. Stores the moment of
-	// verification (doubles as a boolean: verified === emailVerified !== null).
 	emailVerified: timestamp("email_verified"),
 	refreshTokenVersion: integer("refresh_token_version").notNull().default(1),
 	createdAt: timestamp("created_at").notNull().defaultNow(),

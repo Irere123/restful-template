@@ -8,6 +8,13 @@
       "when": 1780473205069,
       "tag": "0000_glamorous_weapon_omega",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780476805975,
+      "tag": "0001_tearful_silver_samurai",
+      "breakpoints": true
     }
   ]
 }

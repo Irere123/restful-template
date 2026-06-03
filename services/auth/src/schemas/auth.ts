@@ -18,7 +18,8 @@ export const usernameSchema = z
 		"Username may only contain letters, numbers and underscores",
 	);
 
-export const displayNameSchema = z.string().trim().min(1).max(50);
+/** A person's given or family name (used for first name / last name). */
+export const nameSchema = z.string().trim().min(1).max(50);
 
 /** A 6-digit numeric one-time code (email verification / password reset). */
 export const otpSchema = z
@@ -27,10 +28,10 @@ export const otpSchema = z
 	.regex(/^\d{6}$/, "Code must be 6 digits");
 
 export const registerSchema = z.object({
+	firstName: nameSchema,
+	lastName: nameSchema,
 	email: emailSchema,
 	password: passwordSchema,
-	displayName: displayNameSchema,
-	username: usernameSchema.optional(),
 });
 
 export const loginSchema = z.object({
@@ -40,7 +41,8 @@ export const loginSchema = z.object({
 
 export const updateProfileSchema = z
 	.object({
-		displayName: displayNameSchema.optional(),
+		firstName: nameSchema.optional(),
+		lastName: nameSchema.optional(),
 		username: usernameSchema.optional(),
 	})
 	.refine((v) => Object.keys(v).length > 0, {
@@ -75,6 +77,8 @@ export const updateUserRoleSchema = z.object({
 export const publicUserSchema = z.object({
 	id: z.string(),
 	username: z.string().nullable(),
+	firstName: z.string(),
+	lastName: z.string(),
 	displayName: z.string(),
 	email: z.string(),
 	role: z.enum(USER_ROLES),
