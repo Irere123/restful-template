@@ -46,16 +46,16 @@ export default function VerifyEmailPage(): React.ReactElement {
 	return (
 		<div>
 			<div>
-				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-foreground">
 					Verify your email
 				</h1>
-				<p className="mt-3 text-base text-slate-600">
+				<p className="mt-3 text-base text-muted-foreground">
 					{isLoading || !user ? (
 						"Enter the 6-digit code we sent you."
 					) : (
 						<>
 							Enter the 6-digit code we sent to{" "}
-							<span className="font-semibold text-slate-950">{user.email}</span>.
+							<span className="font-semibold text-foreground">{user.email}</span>.
 						</>
 					)}
 				</p>
@@ -95,7 +95,7 @@ export default function VerifyEmailPage(): React.ReactElement {
 				</Button>
 			</form>
 
-			<div className="mt-8 flex flex-col items-center gap-2 text-center text-slate-600 text-sm">
+			<div className="mt-8 flex flex-col items-center gap-2 text-center text-muted-foreground text-sm">
 				<span>
 					Didn&apos;t get a code?{" "}
 					<button

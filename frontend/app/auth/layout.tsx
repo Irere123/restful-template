@@ -7,6 +7,7 @@ import { useEffect } from "react";
 
 import { Brand } from "@/components/brand";
 import { useAuth } from "@/components/providers/auth-provider";
+import { ThemeIconMenu } from "@/components/theme-controls";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
@@ -61,14 +62,14 @@ export default function AuthLayout({
 	}
 
 	return (
-		<div className="grid min-h-svh bg-white text-slate-950 lg:grid-cols-2">
-			<aside className="relative hidden min-h-svh flex-col overflow-hidden bg-slate-50 px-8 py-9 lg:flex">
+		<div className="grid min-h-svh bg-background text-foreground lg:grid-cols-2">
+			<aside className="relative hidden min-h-svh flex-col overflow-hidden bg-muted/40 px-8 py-9 lg:flex">
 				<Brand iconOnly className="absolute left-8 top-8" />
 
 				<div className="flex flex-1 items-center justify-center">
 					<div className="w-full max-w-xl text-center">
 						{testimonial.showStarsAbove && <Stars className="mb-9" />}
-						<h2 className="text-balance font-semibold text-[32px] leading-[1.17] tracking-normal text-slate-950">
+						<h2 className="text-balance font-semibold text-[32px] leading-[1.17] tracking-normal text-foreground">
 							{testimonial.quote}
 						</h2>
 						<div className="mt-9 flex flex-col items-center">
@@ -81,27 +82,29 @@ export default function AuthLayout({
 									className="size-16 rounded-full object-cover"
 									priority
 								/>
-								<span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full border-2 border-slate-50 bg-white">
+								<span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full border-2 border-background bg-background">
 									<span
 										className={cn("size-3 rounded-full", testimonial.accent)}
 									/>
 								</span>
 							</div>
-							<p className="mt-4 font-semibold text-base text-slate-950">
+							<p className="mt-4 font-semibold text-base text-foreground">
 								{testimonial.name}
 							</p>
-							<p className="mt-1 text-slate-600 text-sm">{testimonial.role}</p>
+							<p className="mt-1 text-muted-foreground text-sm">
+								{testimonial.role}
+							</p>
 							{!testimonial.showStarsAbove && <Stars className="mt-8" />}
 						</div>
 					</div>
 				</div>
 
-				<div className="flex items-center justify-between text-slate-600 text-sm">
+				<div className="flex items-center justify-between text-muted-foreground text-sm">
 					<span>&copy; TZW Fire Safety</span>
 					{mode === "register" && (
 						<a
 							href="mailto:help@tzw.test"
-							className="inline-flex items-center gap-2 hover:text-slate-950"
+							className="inline-flex items-center gap-2 hover:text-foreground"
 						>
 							<Mail className="size-4" />
 							help@tzw.test
@@ -111,13 +114,18 @@ export default function AuthLayout({
 			</aside>
 
 			<section className="flex min-h-svh flex-col px-6 py-8 sm:px-10 lg:px-20">
-				<div className="lg:hidden">
-					<Brand />
+				<div className="flex items-center justify-between gap-4">
+					<div className="lg:hidden">
+						<Brand />
+					</div>
+					<div className="ms-auto">
+						<ThemeIconMenu />
+					</div>
 				</div>
 				<main className="flex flex-1 items-center justify-center py-12">
 					<div className="w-full max-w-90">{children}</div>
 				</main>
-				<p className="text-center text-slate-500 text-sm lg:hidden">
+				<p className="text-center text-muted-foreground text-sm lg:hidden">
 					&copy; TZW Fire Safety
 				</p>
 			</section>

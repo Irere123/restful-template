@@ -6,9 +6,12 @@ import { useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
+	Menu,
 	MenuGroupLabel,
+	MenuPopup,
 	MenuRadioGroup,
 	MenuRadioItem,
+	MenuTrigger,
 } from "@/components/ui/menu";
 import { cn } from "@/lib/utils";
 
@@ -102,5 +105,27 @@ export function ThemeMenuRadioGroup(): React.ReactElement {
 				);
 			})}
 		</MenuRadioGroup>
+	);
+}
+
+export function ThemeIconMenu(): React.ReactElement {
+	const { theme, resolvedTheme } = useTheme();
+	const mounted = useMounted();
+	const activeTheme = mounted ? (theme ?? "system") : "system";
+	const iconTheme = activeTheme === "system" ? resolvedTheme : activeTheme;
+	const Icon = iconTheme === "dark" ? MoonIcon : SunIcon;
+
+	return (
+		<Menu>
+			<MenuTrigger
+				render={<Button variant="outline" size="icon" />}
+				aria-label="Theme"
+			>
+				<Icon />
+			</MenuTrigger>
+			<MenuPopup align="end" className="w-44">
+				<ThemeMenuRadioGroup />
+			</MenuPopup>
+		</Menu>
 	);
 }

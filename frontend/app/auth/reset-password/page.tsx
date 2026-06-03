@@ -55,10 +55,10 @@ export default function ResetPasswordPage(): React.ReactElement {
 	return (
 		<div>
 			<div>
-				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-foreground">
 					Reset password
 				</h1>
-				<p className="mt-3 text-base text-slate-600">
+				<p className="mt-3 text-base text-muted-foreground">
 					Enter the code we emailed you and choose a new password.
 				</p>
 			</div>
@@ -74,7 +74,7 @@ export default function ResetPasswordPage(): React.ReactElement {
 						value={values.email}
 						onChange={(e) => update("email", e.target.value)}
 						aria-invalid={Boolean(errors.email)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 
@@ -96,7 +96,7 @@ export default function ResetPasswordPage(): React.ReactElement {
 							update("code", e.target.value.replace(/\D/g, "").slice(0, 6))
 						}
 						aria-invalid={Boolean(errors.code)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 
@@ -115,7 +115,7 @@ export default function ResetPasswordPage(): React.ReactElement {
 						value={values.newPassword}
 						onChange={(e) => update("newPassword", e.target.value)}
 						aria-invalid={Boolean(errors.newPassword)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 

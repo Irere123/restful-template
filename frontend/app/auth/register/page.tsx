@@ -80,10 +80,10 @@ export default function RegisterPage(): React.ReactElement {
 	return (
 		<div>
 			<div>
-				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-foreground">
 					Sign up
 				</h1>
-				<p className="mt-3 text-base text-slate-600">
+				<p className="mt-3 text-base text-muted-foreground">
 					Start your 30-day free trial.
 				</p>
 			</div>
@@ -98,7 +98,7 @@ export default function RegisterPage(): React.ReactElement {
 						value={values.name}
 						onChange={(e) => update("name", e.target.value)}
 						aria-invalid={Boolean(errors.name)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 
@@ -112,7 +112,7 @@ export default function RegisterPage(): React.ReactElement {
 						value={values.email}
 						onChange={(e) => update("email", e.target.value)}
 						aria-invalid={Boolean(errors.email)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 
@@ -132,7 +132,7 @@ export default function RegisterPage(): React.ReactElement {
 						value={values.password}
 						onChange={(e) => update("password", e.target.value)}
 						aria-invalid={Boolean(errors.password)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 
@@ -146,7 +146,7 @@ export default function RegisterPage(): React.ReactElement {
 				</Button>
 			</form>
 
-			<div className="mt-24 text-center text-slate-600 text-sm">
+			<div className="mt-24 text-center text-muted-foreground text-sm">
 				Already have an account?{" "}
 				<Link
 					href="/auth/login"

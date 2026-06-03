@@ -34,15 +34,15 @@ export default function ForgotPasswordPage(): React.ReactElement {
 	if (sent) {
 		return (
 			<div className="text-center">
-				<span className="mx-auto flex size-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+				<span className="mx-auto flex size-11 items-center justify-center rounded-full bg-success/10 text-success-foreground">
 					<CheckCircle2Icon className="size-6" />
 				</span>
-				<h1 className="mt-5 font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+				<h1 className="mt-5 font-semibold text-[30px] leading-9 tracking-normal text-foreground">
 					Check your email
 				</h1>
-				<p className="mt-3 text-base text-slate-600">
+				<p className="mt-3 text-base text-muted-foreground">
 					If an account exists for{" "}
-					<span className="font-semibold text-slate-950">{email}</span>, we&apos;ve
+					<span className="font-semibold text-foreground">{email}</span>, we&apos;ve
 					sent a password-reset code.
 				</p>
 				<Button
@@ -65,10 +65,10 @@ export default function ForgotPasswordPage(): React.ReactElement {
 	return (
 		<div>
 			<div>
-				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-foreground">
 					Forgot password
 				</h1>
-				<p className="mt-3 text-base text-slate-600">
+				<p className="mt-3 text-base text-muted-foreground">
 					Enter your email and we&apos;ll send you a code to reset it.
 				</p>
 			</div>
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage(): React.ReactElement {
 							setError("");
 						}}
 						aria-invalid={Boolean(error)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 				<Button
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage(): React.ReactElement {
 				</Button>
 			</form>
 
-			<div className="mt-8 text-center text-slate-600 text-sm">
+			<div className="mt-8 text-center text-muted-foreground text-sm">
 				Remembered it?{" "}
 				<Link
 					href="/auth/login"

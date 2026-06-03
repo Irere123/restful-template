@@ -60,10 +60,10 @@ export default function LoginPage(): React.ReactElement {
 	return (
 		<div>
 			<div>
-				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-slate-950">
+				<h1 className="font-semibold text-[30px] leading-9 tracking-normal text-foreground">
 					Welcome back
 				</h1>
-				<p className="mt-3 text-base text-slate-600">
+				<p className="mt-3 text-base text-muted-foreground">
 					Welcome back! Please enter your details.
 				</p>
 			</div>
@@ -79,7 +79,7 @@ export default function LoginPage(): React.ReactElement {
 						value={values.email}
 						onChange={(e) => update("email", e.target.value)}
 						aria-invalid={Boolean(errors.email)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 
@@ -93,20 +93,20 @@ export default function LoginPage(): React.ReactElement {
 						value={values.password}
 						onChange={(e) => update("password", e.target.value)}
 						aria-invalid={Boolean(errors.password)}
-						className="rounded-lg border-slate-300 bg-white text-slate-950 shadow-sm"
+						className="rounded-lg shadow-sm"
 					/>
 				</FormField>
 
 				<div className="-mt-1 flex items-center justify-between gap-4 text-sm">
 					<Label
 						htmlFor="remember"
-						className="cursor-pointer font-medium text-slate-700"
+						className="cursor-pointer font-medium text-foreground"
 					>
 						<Checkbox
 							id="remember"
 							checked={remember}
 							onCheckedChange={(checked) => setRemember(checked === true)}
-							className="border-slate-300"
+							className="border-input"
 						/>
 						Remember for 30 days
 					</Label>
@@ -128,7 +128,7 @@ export default function LoginPage(): React.ReactElement {
 				</Button>
 			</form>
 
-			<div className="mt-8 text-center text-slate-600 text-sm">
+			<div className="mt-8 text-center text-muted-foreground text-sm">
 				Don&apos;t have an account?{" "}
 				<Link
 					href="/auth/register"
