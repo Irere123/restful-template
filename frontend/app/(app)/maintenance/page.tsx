@@ -8,6 +8,7 @@ import { DataState } from "@/components/data-state";
 import { FilterSelect } from "@/components/enum-select";
 import { PageHeader } from "@/components/page-header";
 import { RoleGate } from "@/components/role-gate";
+import { TablePagination } from "@/components/table-pagination";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -18,6 +19,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { usePagination } from "@/hooks/use-pagination";
 import { useExtinguishers } from "@/lib/api/extinguishers";
 import { useMaintenanceLogs } from "@/lib/api/maintenance";
 import { formatDate } from "@/lib/format";
@@ -44,6 +46,9 @@ export default function MaintenancePage(): React.ReactElement {
 		[extinguishers.data],
 	);
 
+	const rows = query.data ?? [];
+	const pagination = usePagination(rows, { resetKey: extinguisherId });
+
 	return (
 		<div className="space-y-5">
 			<PageHeader
@@ -61,10 +66,7 @@ export default function MaintenancePage(): React.ReactElement {
 							className="w-64 max-w-[min(16rem,calc(100vw-2rem))]"
 						/>
 						<RoleGate roles={["admin", "inspector"]}>
-							<Button
-								onClick={() => setFormOpen(true)}
-								className="shrink-0"
-							>
+							<Button onClick={() => setFormOpen(true)} className="shrink-0">
 								<PlusIcon />
 								Log maintenance
 							</Button>
@@ -94,7 +96,7 @@ export default function MaintenancePage(): React.ReactElement {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{(query.data ?? []).map((m) => (
+							{pagination.pageItems.map((m) => (
 								<TableRow key={m.id}>
 									<TableCell className="font-medium">
 										{serialById.get(m.extinguisherId) ?? "—"}
@@ -110,6 +112,15 @@ export default function MaintenancePage(): React.ReactElement {
 							))}
 						</TableBody>
 					</Table>
+					<TablePagination
+						page={pagination.page}
+						pageCount={pagination.pageCount}
+						total={pagination.total}
+						from={pagination.from}
+						to={pagination.to}
+						onPageChange={pagination.setPage}
+						itemLabel="maintenance logs"
+					/>
 				</DataState>
 			</Card>
 

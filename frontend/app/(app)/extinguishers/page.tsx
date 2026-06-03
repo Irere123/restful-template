@@ -19,6 +19,7 @@ import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
 import { RoleGate } from "@/components/role-gate";
 import { ExtinguisherStatusBadge } from "@/components/status-badge";
+import { TablePagination } from "@/components/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,6 +43,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { usePagination } from "@/hooks/use-pagination";
 import {
 	useDeleteExtinguisher,
 	useExtinguishers,
@@ -78,6 +80,10 @@ export default function ExtinguishersPage(): React.ReactElement {
 				e.location.toLowerCase().includes(term),
 		);
 	}, [query.data, search]);
+
+	const pagination = usePagination(rows, {
+		resetKey: `${search}|${status}|${type}`,
+	});
 
 	function openCreate(): void {
 		setEditing(undefined);
@@ -203,7 +209,7 @@ export default function ExtinguishersPage(): React.ReactElement {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{rows.map((e) => (
+							{pagination.pageItems.map((e) => (
 								<TableRow key={e.id}>
 									<TableCell className="font-medium">
 										{e.serialNumber}
@@ -253,6 +259,15 @@ export default function ExtinguishersPage(): React.ReactElement {
 							))}
 						</TableBody>
 					</Table>
+					<TablePagination
+						page={pagination.page}
+						pageCount={pagination.pageCount}
+						total={pagination.total}
+						from={pagination.from}
+						to={pagination.to}
+						onPageChange={pagination.setPage}
+						itemLabel="extinguishers"
+					/>
 				</DataState>
 			</Card>
 

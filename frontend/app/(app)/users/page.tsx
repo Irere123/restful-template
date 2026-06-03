@@ -16,6 +16,7 @@ import { FormField } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
 import { RoleBadge } from "@/components/status-badge";
+import { TablePagination } from "@/components/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,7 +30,6 @@ import {
 	DialogPopup,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
 	Empty,
 	EmptyDescription,
@@ -37,6 +37,7 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
 import {
 	Menu,
 	MenuGroupLabel,
@@ -55,6 +56,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { usePagination } from "@/hooks/use-pagination";
 import { ApiError } from "@/lib/api/client";
 import { USER_ROLES, type User, type UserRole } from "@/lib/api/types";
 import {
@@ -74,6 +76,9 @@ export default function UsersPage(): React.ReactElement {
 	const remove = useDeleteUser();
 	const [deleteTarget, setDeleteTarget] = useState<User | undefined>();
 	const [createOpen, setCreateOpen] = useState(false);
+
+	const rows = query.data ?? [];
+	const pagination = usePagination(rows);
 
 	if (!isAdmin) {
 		return (
@@ -152,7 +157,7 @@ export default function UsersPage(): React.ReactElement {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{(query.data ?? []).map((u) => {
+							{pagination.pageItems.map((u) => {
 								const isSelf = u.id === currentUser?.id;
 								return (
 									<TableRow key={u.id}>
@@ -222,6 +227,15 @@ export default function UsersPage(): React.ReactElement {
 							})}
 						</TableBody>
 					</Table>
+					<TablePagination
+						page={pagination.page}
+						pageCount={pagination.pageCount}
+						total={pagination.total}
+						from={pagination.from}
+						to={pagination.to}
+						onPageChange={pagination.setPage}
+						itemLabel="users"
+					/>
 				</DataState>
 			</Card>
 

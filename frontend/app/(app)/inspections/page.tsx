@@ -25,6 +25,7 @@ import {
 	InspectionResultBadge,
 	InspectionStatusBadge,
 } from "@/components/status-badge";
+import { TablePagination } from "@/components/table-pagination";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -42,6 +43,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { usePagination } from "@/hooks/use-pagination";
 import { useExtinguishers } from "@/lib/api/extinguishers";
 import {
 	useDeleteInspection,
@@ -72,6 +74,9 @@ export default function InspectionsPage(): React.ReactElement {
 		for (const e of extinguishers.data ?? []) map.set(e.id, e.serialNumber);
 		return map;
 	}, [extinguishers.data]);
+
+	const rows = query.data ?? [];
+	const pagination = usePagination(rows, { resetKey: status });
 
 	function confirmCancel(): void {
 		if (!cancelling) return;
@@ -114,10 +119,7 @@ export default function InspectionsPage(): React.ReactElement {
 							size="default"
 							className="w-44"
 						/>
-						<Button
-							onClick={() => setScheduleOpen(true)}
-							className="shrink-0"
-						>
+						<Button onClick={() => setScheduleOpen(true)} className="shrink-0">
 							<PlusIcon />
 							Schedule inspection
 						</Button>
@@ -159,7 +161,7 @@ export default function InspectionsPage(): React.ReactElement {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{(query.data ?? []).map((i) => {
+							{pagination.pageItems.map((i) => {
 								const isScheduled = i.status === "scheduled";
 								return (
 									<TableRow key={i.id}>
@@ -226,6 +228,15 @@ export default function InspectionsPage(): React.ReactElement {
 							})}
 						</TableBody>
 					</Table>
+					<TablePagination
+						page={pagination.page}
+						pageCount={pagination.pageCount}
+						total={pagination.total}
+						from={pagination.from}
+						to={pagination.to}
+						onPageChange={pagination.setPage}
+						itemLabel="inspections"
+					/>
 				</DataState>
 			</Card>
 
