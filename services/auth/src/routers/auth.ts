@@ -4,6 +4,7 @@ import { Router } from "express";
 
 import {
 	createUser,
+	deleteUser,
 	getUserByEmail,
 	getUserById,
 	getUserByUsername,
@@ -14,13 +15,19 @@ import {
 	confirmEmailVerification,
 	issueEmailVerification,
 } from "@auth/lib/email-verification";
+import {
+	sendAccountDeletedEmail,
+	sendLoginAlert,
+	sendLogoutAlert,
+	sendWelcomeEmail,
+} from "@auth/lib/notifications";
 import { hashPassword, verifyPassword } from "@auth/lib/password";
 import {
 	consumePasswordResetCode,
 	issuePasswordReset,
 } from "@auth/lib/password-reset";
 import logger from "@auth/logger";
-import { requireAuth } from "@auth/middleware/auth";
+import { optionalAuth, requireAuth } from "@auth/middleware/auth";
 import {
 	changePasswordSchema,
 	forgotPasswordSchema,
@@ -39,6 +46,24 @@ import {
 	sendAuthCookies,
 	setTokenCookies,
 } from "@auth/utils/tokens";
+
+/** Best-effort request metadata for security (sign-in/out) alert emails. */
+const getClientContext = (req: {
+	ip?: string;
+	headers: Record<string, unknown>;
+}) => {
+	const forwarded = req.headers["x-forwarded-for"];
+	const ipAddress =
+		(typeof forwarded === "string" ? forwarded.split(",")[0]?.trim() : "") ||
+		req.ip ||
+		undefined;
+	const ua = req.headers["user-agent"];
+	return {
+		time: new Date().toISOString(),
+		ipAddress,
+		userAgent: typeof ua === "string" ? ua : undefined,
+	};
+};
 
 export const createAuthRouter = (): Router => {
 	const router = Router();
@@ -86,6 +111,8 @@ export const createAuthRouter = (): Router => {
 			}
 
 			sendAuthCookies(res, user);
+			// Greet the new user (separate from the verification code email above).
+			sendWelcomeEmail(user.email, user.displayName);
 			res.status(201).json({ user: sanitizeUser(user) });
 		}),
 	);
@@ -155,6 +182,8 @@ export const createAuthRouter = (): Router => {
 			}
 
 			sendAuthCookies(res, user);
+			// Security alert: notify the owner of a new sign-in.
+			sendLoginAlert(user.email, user.displayName, getClientContext(req));
 			res.json({ user: sanitizeUser(user) });
 		}),
 	);
@@ -297,10 +326,23 @@ export const createAuthRouter = (): Router => {
 		}),
 	);
 
-	router.post("/logout", (_req, res) => {
-		clearAuthCookies(res);
-		res.json({ success: true });
-	});
+	router.post(
+		"/logout",
+		// Optional auth so we can address the sign-out confirmation to the user,
+		// but logging out must succeed even without a valid session.
+		optionalAuth,
+		asyncHandler(async (req, res) => {
+			clearAuthCookies(res);
+			const user =
+				req.user ?? (req.userId ? await getUserById(req.userId) : undefined);
+			if (user) {
+				sendLogoutAlert(user.email, user.displayName, {
+					time: new Date().toISOString(),
+				});
+			}
+			res.json({ success: true });
+		}),
+	);
 
 	router.post(
 		"/logout-all",
@@ -308,6 +350,33 @@ export const createAuthRouter = (): Router => {
 		asyncHandler(async (req, res) => {
 			await revokeRefreshTokens(req.userId!);
 			clearAuthCookies(res);
+			const user =
+				req.user ?? (req.userId ? await getUserById(req.userId) : undefined);
+			if (user) {
+				sendLogoutAlert(user.email, user.displayName, {
+					allDevices: true,
+					time: new Date().toISOString(),
+				});
+			}
+			res.json({ success: true });
+		}),
+	);
+
+	router.delete(
+		"/me",
+		requireAuth,
+		asyncHandler(async (req, res) => {
+			const user = req.user ?? (await getUserById(req.userId!));
+			if (!user) {
+				throw new ApiError({ code: "UNAUTHORIZED" });
+			}
+
+			const deleted = await deleteUser(user.id);
+			if (!deleted) {
+				throw new ApiError({ code: "NOT_FOUND", message: "User not found" });
+			}
+			clearAuthCookies(res);
+			sendAccountDeletedEmail(user.email, user.displayName, false);
 			res.json({ success: true });
 		}),
 	);

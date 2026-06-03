@@ -1,10 +1,16 @@
 import {
+	accountDeletedSchema,
 	expiryAlertSchema,
+	expiryDigestSchema,
 	genericEmailSchema,
+	inspectionReminderSchema,
 	inspectionScheduledSchema,
+	loginAlertSchema,
+	logoutAlertSchema,
 	maintenanceLoggedSchema,
 	otpNotificationSchema,
 	passwordResetNotificationSchema,
+	welcomeSchema,
 } from "@notification/schemas";
 import { z } from "zod";
 
@@ -25,6 +31,12 @@ const components = {
 		InspectionScheduled: toSchema(inspectionScheduledSchema),
 		MaintenanceLogged: toSchema(maintenanceLoggedSchema),
 		ExpiryAlert: toSchema(expiryAlertSchema),
+		Welcome: toSchema(welcomeSchema),
+		LoginAlert: toSchema(loginAlertSchema),
+		LogoutAlert: toSchema(logoutAlertSchema),
+		AccountDeleted: toSchema(accountDeletedSchema),
+		ExpiryDigest: toSchema(expiryDigestSchema),
+		InspectionReminder: toSchema(inspectionReminderSchema),
 		Error: {
 			type: "object",
 			properties: {
@@ -130,6 +142,30 @@ const paths = {
 	"/notifications/expiry-alert": sendPath(
 		"Send an extinguisher expiry alert",
 		"ExpiryAlert",
+	),
+	"/notifications/welcome": sendPath(
+		"Send a welcome email after registration",
+		"Welcome",
+	),
+	"/notifications/login-alert": sendPath(
+		"Send a new-sign-in security alert",
+		"LoginAlert",
+	),
+	"/notifications/logout-alert": sendPath(
+		"Send a sign-out confirmation",
+		"LogoutAlert",
+	),
+	"/notifications/account-deleted": sendPath(
+		"Send an account-deleted confirmation",
+		"AccountDeleted",
+	),
+	"/notifications/expiry-digest": sendPath(
+		"Send the daily expiry digest (cron)",
+		"ExpiryDigest",
+	),
+	"/notifications/inspection-reminder": sendPath(
+		"Send the daily inspection reminder digest (cron)",
+		"InspectionReminder",
 	),
 	"/notifications/email": sendPath(
 		"Send a generic transactional email",

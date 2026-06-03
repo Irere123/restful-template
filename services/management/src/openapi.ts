@@ -101,6 +101,7 @@ const components = {
 	},
 	securitySchemes: {
 		cookieAuth: { type: "apiKey", in: "cookie", name: "id" },
+		internalKey: { type: "apiKey", in: "header", name: "x-internal-key" },
 	},
 } as const;
 
@@ -389,6 +390,68 @@ const paths = {
 			},
 		},
 	},
+	"/jobs/expiry-scan": {
+		post: {
+			tags: ["Jobs"],
+			summary:
+				"Run the expiry scan now (internal): mark expired units and email the digest",
+			security: [{ internalKey: [] }],
+			responses: {
+				200: {
+					description: "Scan summary",
+					content: {
+						"application/json": {
+							schema: {
+								type: "object",
+								properties: {
+									summary: {
+										type: "object",
+										properties: {
+											expiringSoon: { type: "integer" },
+											expired: { type: "integer" },
+											recipients: { type: "integer" },
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				401: errorResponse("Missing or invalid internal key"),
+			},
+		},
+	},
+	"/jobs/inspection-reminders": {
+		post: {
+			tags: ["Jobs"],
+			summary:
+				"Run inspection reminders now (internal): email overdue + upcoming digest",
+			security: [{ internalKey: [] }],
+			responses: {
+				200: {
+					description: "Reminder summary",
+					content: {
+						"application/json": {
+							schema: {
+								type: "object",
+								properties: {
+									summary: {
+										type: "object",
+										properties: {
+											upcoming: { type: "integer" },
+											overdue: { type: "integer" },
+											recipients: { type: "integer" },
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				401: errorResponse("Missing or invalid internal key"),
+			},
+		},
+	},
 } as const;
 
 export const openApiDocument = {
@@ -404,6 +467,7 @@ export const openApiDocument = {
 		{ name: "Extinguishers" },
 		{ name: "Inspections" },
 		{ name: "Maintenance" },
+		{ name: "Jobs" },
 	],
 	components,
 	security: [{ cookieAuth: [] }],

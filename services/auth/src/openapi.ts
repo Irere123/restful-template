@@ -189,6 +189,16 @@ const paths = {
 				409: errorResponse("Username already taken"),
 			},
 		},
+		delete: {
+			tags: ["Auth"],
+			summary: "Delete your own account (and email a confirmation)",
+			security: [{ cookieAuth: [] }],
+			responses: {
+				200: successResponse,
+				401: errorResponse("Not authenticated"),
+				404: errorResponse("User not found"),
+			},
+		},
 	},
 	"/auth/change-password": {
 		post: {

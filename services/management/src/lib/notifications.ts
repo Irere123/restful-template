@@ -55,3 +55,53 @@ export const notifyMaintenanceLogged = async (
 		});
 	}
 };
+
+export type ExpiryDigestItem = {
+	serialNumber: string;
+	location?: string;
+	expiryDate: string;
+	daysRemaining?: number;
+};
+
+export const notifyExpiryDigest = async (input: {
+	to: string;
+	displayName?: string;
+	expiringSoon: ExpiryDigestItem[];
+	expired: ExpiryDigestItem[];
+}): Promise<void> => {
+	try {
+		await serviceRequest(
+			`${config.notificationUrl}/notifications/expiry-digest`,
+			{ method: "POST", internalKey: config.internalApiKey, body: input },
+		);
+	} catch (err) {
+		logger.error("Failed to send expiry-digest notification", {
+			error: err instanceof Error ? err.message : String(err),
+		});
+	}
+};
+
+export type InspectionReminderItem = {
+	serialNumber: string;
+	location?: string;
+	scheduledDate: string;
+	scheduledTime?: string;
+};
+
+export const notifyInspectionReminder = async (input: {
+	to: string;
+	displayName?: string;
+	upcoming: InspectionReminderItem[];
+	overdue: InspectionReminderItem[];
+}): Promise<void> => {
+	try {
+		await serviceRequest(
+			`${config.notificationUrl}/notifications/inspection-reminder`,
+			{ method: "POST", internalKey: config.internalApiKey, body: input },
+		);
+	} catch (err) {
+		logger.error("Failed to send inspection-reminder notification", {
+			error: err instanceof Error ? err.message : String(err),
+		});
+	}
+};

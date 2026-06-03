@@ -7,7 +7,7 @@ import {
 	type NewExtinguisher,
 } from "@management/db/schema";
 import { ApiError } from "@repo/core";
-import { and, eq, type SQL } from "drizzle-orm";
+import { and, eq, gte, lt, lte, type SQL } from "drizzle-orm";
 
 export type CreateExtinguisherInput = {
 	id: string;
@@ -103,4 +103,42 @@ export const deleteExtinguisher = async (id: string): Promise<boolean> => {
 		.where(eq(extinguishers.id, id))
 		.returning({ id: extinguishers.id });
 	return deleted.length > 0;
+};
+
+/**
+ * Active extinguishers whose expiry date falls within [today, windowEnd] —
+ * i.e. expiring soon. Used by the scheduled expiry-scan job.
+ */
+export const listExpiringExtinguishers = async (
+	today: string,
+	windowEnd: string,
+): Promise<Extinguisher[]> => {
+	return db.query.extinguishers.findMany({
+		where: and(
+			eq(extinguishers.status, "active"),
+			gte(extinguishers.expiryDate, today),
+			lte(extinguishers.expiryDate, windowEnd),
+		),
+		orderBy: (e, { asc }) => asc(e.expiryDate),
+	});
+};
+
+/**
+ * Flip every still-active extinguisher whose expiry date has passed to
+ * `expired`, returning the rows that changed. Returning only the newly-expired
+ * units means the daily job alerts on each unit once, not every day forever.
+ */
+export const markExpiredExtinguishers = async (
+	today: string,
+): Promise<Extinguisher[]> => {
+	return db
+		.update(extinguishers)
+		.set({ status: "expired", updatedAt: new Date() })
+		.where(
+			and(
+				eq(extinguishers.status, "active"),
+				lt(extinguishers.expiryDate, today),
+			),
+		)
+		.returning();
 };

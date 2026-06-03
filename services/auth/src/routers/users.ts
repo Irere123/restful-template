@@ -5,6 +5,7 @@ import {
 	revokeRefreshTokens,
 	updateUser,
 } from "@auth/db/queries";
+import { sendAccountDeletedEmail } from "@auth/lib/notifications";
 import { requireAuth, requireRole } from "@auth/middleware/auth";
 import { updateUserRoleSchema } from "@auth/schemas/auth";
 import { parse } from "@auth/utils/parse";
@@ -78,10 +79,13 @@ export const createUsersRouter = (): Router => {
 				});
 			}
 
+			// Load before deleting so we can address the confirmation email.
+			const target = await getUserById(id);
 			const deleted = await deleteUser(id);
-			if (!deleted) {
+			if (!deleted || !target) {
 				throw new ApiError({ code: "NOT_FOUND", message: "User not found" });
 			}
+			sendAccountDeletedEmail(target.email, target.displayName, true);
 			res.json({ success: true });
 		}),
 	);

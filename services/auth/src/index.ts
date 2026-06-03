@@ -1,15 +1,15 @@
+import config from "@auth/config";
+import logger from "@auth/logger";
+import { openApiDocument } from "@auth/openapi";
+import { createAuthRouter } from "@auth/routers/auth";
+import { createInternalRouter } from "@auth/routers/internal";
+import { createUsersRouter } from "@auth/routers/users";
 import {
 	createBaseApp,
 	createDocsRouter,
 	finalizeApp,
 	startServer,
 } from "@repo/core";
-
-import config from "@auth/config";
-import logger from "@auth/logger";
-import { openApiDocument } from "@auth/openapi";
-import { createAuthRouter } from "@auth/routers/auth";
-import { createUsersRouter } from "@auth/routers/users";
 
 const app = createBaseApp({
 	serviceName: "auth",
@@ -21,6 +21,7 @@ const app = createBaseApp({
 
 app.use("/auth", createAuthRouter());
 app.use("/users", createUsersRouter());
+app.use("/internal", createInternalRouter());
 
 finalizeApp(app, logger);
 

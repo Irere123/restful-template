@@ -52,9 +52,9 @@
 					"level": "on",
 					"options": {
 						"groups": [
-							[":BUN:", ":NODE:", ":PACKAGE:", "!@api/**"],
+							[":BUN:", ":NODE:", ":PACKAGE:", "!@/**"],
 							":BLANK_LINE:",
-							["@api", "@api/**"],
+							["@repo/**", "@notification/", "@management"],
 							":PATH:"
 						]
 					}

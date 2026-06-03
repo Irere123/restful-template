@@ -1,31 +1,38 @@
-import {
-	asyncHandler,
-	createRequireInternal,
-	parse,
-} from "@repo/core";
-import { Router } from "express";
-import type { ReactElement } from "react";
-
+import config from "@notification/config";
 import { listNotifications, logNotification } from "@notification/db/queries";
 import type { NotificationStatus } from "@notification/db/schema";
-import { EmailLayout, paragraph } from "@notification/emails/layout";
+import { AccountDeletedEmail } from "@notification/emails/account-deleted";
 import { ExpiryAlertEmail } from "@notification/emails/expiry-alert";
+import { ExpiryDigestEmail } from "@notification/emails/expiry-digest";
+import { InspectionReminderEmail } from "@notification/emails/inspection-reminder";
 import { InspectionScheduledEmail } from "@notification/emails/inspection-scheduled";
+import { EmailLayout, paragraph } from "@notification/emails/layout";
+import { LoginAlertEmail } from "@notification/emails/login-alert";
+import { LogoutAlertEmail } from "@notification/emails/logout-alert";
 import { MaintenanceLoggedEmail } from "@notification/emails/maintenance-logged";
 import { OtpVerificationEmail } from "@notification/emails/otp-verification";
 import { PasswordResetEmail } from "@notification/emails/password-reset";
-import config from "@notification/config";
+import { WelcomeEmail } from "@notification/emails/welcome";
 import { emailEnabled, sendEmail } from "@notification/lib/email";
 import logger from "@notification/logger";
 import {
+	accountDeletedSchema,
 	expiryAlertSchema,
+	expiryDigestSchema,
 	genericEmailSchema,
+	inspectionReminderSchema,
 	inspectionScheduledSchema,
+	loginAlertSchema,
+	logoutAlertSchema,
 	maintenanceLoggedSchema,
 	otpNotificationSchema,
 	passwordResetNotificationSchema,
+	welcomeSchema,
 } from "@notification/schemas";
 import { Text } from "@react-email/components";
+import { asyncHandler, createRequireInternal, parse } from "@repo/core";
+import { Router } from "express";
+import type { ReactElement } from "react";
 
 interface DeliverInput {
 	type: string;
@@ -218,6 +225,142 @@ export const createNotificationsRouter = (): Router => {
 				metadata: {
 					extinguisherSerial: data.extinguisherSerial,
 					expiryDate: data.expiryDate,
+				},
+			});
+			res.json({ success: status !== "failed", status });
+		}),
+	);
+
+	router.post(
+		"/welcome",
+		asyncHandler(async (req, res) => {
+			const { to, displayName } = parse(welcomeSchema, req.body);
+			const status = await deliver({
+				type: "welcome",
+				to,
+				subject: `Welcome to ${config.appName}`,
+				template: (
+					<WelcomeEmail displayName={displayName} appName={config.appName} />
+				),
+			});
+			res.json({ success: status !== "failed", status });
+		}),
+	);
+
+	router.post(
+		"/login-alert",
+		asyncHandler(async (req, res) => {
+			const data = parse(loginAlertSchema, req.body);
+			const status = await deliver({
+				type: "login_alert",
+				to: data.to,
+				subject: `New sign-in to your ${config.appName} account`,
+				template: (
+					<LoginAlertEmail
+						displayName={data.displayName}
+						time={data.time}
+						ipAddress={data.ipAddress}
+						userAgent={data.userAgent}
+						appName={config.appName}
+					/>
+				),
+				metadata: { ipAddress: data.ipAddress, time: data.time },
+			});
+			res.json({ success: status !== "failed", status });
+		}),
+	);
+
+	router.post(
+		"/logout-alert",
+		asyncHandler(async (req, res) => {
+			const data = parse(logoutAlertSchema, req.body);
+			const status = await deliver({
+				type: "logout_alert",
+				to: data.to,
+				subject: data.allDevices
+					? `You were signed out of all ${config.appName} devices`
+					: `You were signed out of ${config.appName}`,
+				template: (
+					<LogoutAlertEmail
+						displayName={data.displayName}
+						time={data.time}
+						allDevices={data.allDevices}
+						appName={config.appName}
+					/>
+				),
+				metadata: { allDevices: data.allDevices ?? false },
+			});
+			res.json({ success: status !== "failed", status });
+		}),
+	);
+
+	router.post(
+		"/account-deleted",
+		asyncHandler(async (req, res) => {
+			const data = parse(accountDeletedSchema, req.body);
+			const status = await deliver({
+				type: "account_deleted",
+				to: data.to,
+				subject: `Your ${config.appName} account has been deleted`,
+				template: (
+					<AccountDeletedEmail
+						displayName={data.displayName}
+						byAdmin={data.byAdmin}
+						appName={config.appName}
+					/>
+				),
+				metadata: { byAdmin: data.byAdmin ?? false },
+			});
+			res.json({ success: status !== "failed", status });
+		}),
+	);
+
+	router.post(
+		"/expiry-digest",
+		asyncHandler(async (req, res) => {
+			const data = parse(expiryDigestSchema, req.body);
+			const total = data.expiringSoon.length + data.expired.length;
+			const status = await deliver({
+				type: "expiry_digest",
+				to: data.to,
+				subject: `${config.appName}: ${total} extinguisher(s) need attention`,
+				template: (
+					<ExpiryDigestEmail
+						displayName={data.displayName}
+						expiringSoon={data.expiringSoon}
+						expired={data.expired}
+						appName={config.appName}
+					/>
+				),
+				metadata: {
+					expiringSoon: data.expiringSoon.length,
+					expired: data.expired.length,
+				},
+			});
+			res.json({ success: status !== "failed", status });
+		}),
+	);
+
+	router.post(
+		"/inspection-reminder",
+		asyncHandler(async (req, res) => {
+			const data = parse(inspectionReminderSchema, req.body);
+			const total = data.upcoming.length + data.overdue.length;
+			const status = await deliver({
+				type: "inspection_reminder",
+				to: data.to,
+				subject: `${config.appName}: ${total} inspection(s) need attention`,
+				template: (
+					<InspectionReminderEmail
+						displayName={data.displayName}
+						upcoming={data.upcoming}
+						overdue={data.overdue}
+						appName={config.appName}
+					/>
+				),
+				metadata: {
+					upcoming: data.upcoming.length,
+					overdue: data.overdue.length,
 				},
 			});
 			res.json({ success: status !== "failed", status });

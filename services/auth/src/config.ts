@@ -9,6 +9,10 @@ const envSchema = baseEnvSchema
 		DOMAIN: z.string().optional(),
 		APP_NAME: z.string().default("TZW Fire Safety"),
 		NOTIFICATION_URL: z.string().default("http://localhost:8084"),
+		SECURITY_ALERTS_ENABLED: z
+			.string()
+			.default("true")
+			.transform((v) => v !== "false"),
 	})
 	.superRefine((env, ctx) => {
 		// Enforce production-grade settings only when actually running in prod, so
@@ -75,6 +79,7 @@ export const config = {
 	domain: env.DOMAIN,
 	appName: env.APP_NAME,
 	notificationUrl: env.NOTIFICATION_URL,
+	securityAlertsEnabled: env.SECURITY_ALERTS_ENABLED,
 };
 
 export default config;

@@ -1,6 +1,6 @@
 import type { UserRole } from "@repo/core";
 import { ApiError } from "@repo/core";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@auth/db";
 import { type User, users } from "@auth/db/schema";
@@ -80,6 +80,20 @@ export const revokeRefreshTokens = async (id: string): Promise<void> => {
 export const listUsers = async (): Promise<User[]> => {
 	return db.query.users.findMany({
 		orderBy: (u, { desc }) => desc(u.createdAt),
+	});
+};
+
+/**
+ * Users holding any of the given roles — used by other services (over the
+ * internal API) to resolve the recipients of compliance/cron alerts.
+ */
+export const listUsersByRoles = async (
+	roles: UserRole[],
+): Promise<User[]> => {
+	if (roles.length === 0) return [];
+	return db.query.users.findMany({
+		where: inArray(users.role, roles),
+		orderBy: (u, { asc }) => asc(u.email),
 	});
 };
 

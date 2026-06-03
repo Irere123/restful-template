@@ -6,9 +6,7 @@ maintenance, monitor compliance, and generate real-time reports — built for
 scalability, maintainability, security and high availability.
 
 > This repository is a pnpm + Turborepo monorepo. The **backend microservices**
-> live in `services/*` and share code through `packages/core`. (`services/api`
-> is the original single-service reference template the microservices were
-> derived from; it is not part of the running system.)
+> live in `services/*` and share code through `packages/core`.
 
 ---
 
@@ -47,9 +45,9 @@ verifying a shared JWT** — so no service depends on another at request time
 | ---------------- | ---- | -------------------------------------------------------------------------- | ----------------------- |
 | **gateway**      | 8080 | Single public entry point; reverse proxy; CORS; rate limit; unified Swagger | — (stateless)           |
 | **auth**         | 8081 | Registration, login, JWT sessions, RBAC, profile, OTP email verification, password reset, user management | `restful_auth`          |
-| **management**   | 8082 | Extinguisher registry, inspection scheduling/completion, maintenance logs   | `restful_management`    |
+| **management**   | 8082 | Extinguisher registry, inspection scheduling/completion, maintenance logs; **cron jobs** (expiry scan + inspection reminders) | `restful_management`    |
 | **reporting**    | 8083 | Real-time inventory/inspection/compliance/maintenance reports + PDF/CSV export | — (aggregates over HTTP) |
-| **notification** | 8084 | Centralized outbound email (Resend) + delivery audit log (internal-only)    | `restful_notification`  |
+| **notification** | 8084 | Centralized outbound email (Resend) + delivery audit log; lifecycle + digest emails (internal-only) | `restful_notification`  |
 | `packages/core`  | —    | Shared library: logging, errors, JWT auth middleware, HTTP client, Express bootstrap, validation | —                       |
 
 ### Key design decisions
@@ -68,7 +66,19 @@ verifying a shared JWT** — so no service depends on another at request time
 - **Centralized notifications.** All outbound email is owned by the notification
   service. Other services call it over an **internal-key-authenticated** HTTP
   endpoint; in development (no `RESEND_API_KEY`) emails are logged, not sent, and
-  every attempt is recorded in `restful_notification.notifications`.
+  every attempt is recorded in `restful_notification.notifications`. Covered
+  events: OTP verification, password reset, **welcome**, **new-sign-in** and
+  **sign-out** security alerts, **account deletion**, inspection scheduled,
+  maintenance logged, and the scheduled **expiry** / **inspection-reminder**
+  digests.
+- **Automated, scheduled alerts (cron).** The management service runs background
+  jobs with `node-cron`: a daily **expiry scan** (flips lapsed units to
+  `expired` and emails admins/inspectors a digest of expired + soon-to-expire
+  extinguishers) and a daily **inspection reminder** (digest of overdue +
+  upcoming inspections). Recipients are resolved from auth's internal directory
+  API. Both jobs are idempotent (each unit is alerted once when it crosses its
+  date) and can be run on demand via internal `POST /jobs/*` endpoints. See
+  [Automated notifications & scheduled jobs](#automated-notifications--scheduled-jobs).
 - **Reporting is an aggregator** with no database. It forwards the caller's
   cookie to the management service so the same authentication/RBAC applies.
 - **Shared `@repo/core`** is consumed as TypeScript source (no build step) via
@@ -159,6 +169,7 @@ All routes below are called on `http://localhost:8080`.
 | `POST /auth/refresh`         | public       | Rotate tokens using the refresh cookie    |
 | `GET  /auth/me`              | auth         | Current user                              |
 | `PATCH /auth/me`             | auth         | Update profile                            |
+| `DELETE /auth/me`            | auth         | Delete own account (emails confirmation)  |
 | `POST /auth/change-password` | auth         | Change password (revokes other sessions)  |
 | `POST /auth/verify-email`    | auth         | Confirm email with the 6-digit OTP        |
 | `POST /auth/verify-email/resend` | auth     | Re-send the OTP                           |
@@ -225,6 +236,60 @@ curl -s -b cj.txt "$G/reports/compliance/export?format=pdf" -o compliance.pdf
 
 ---
 
+## Automated notifications & scheduled jobs
+
+### Event-driven (lifecycle) emails
+
+The auth and management services fire emails on user/asset events. All sends are
+**best-effort** — a notification outage never fails the underlying operation —
+and every attempt is recorded in the `notifications` audit log.
+
+| Event                                   | Email          | Type (`notifications.type`) |
+| --------------------------------------- | -------------- | --------------------------- |
+| Register                                | Verification OTP + Welcome | `otp`, `welcome`  |
+| New sign-in                             | Security alert (time, IP, device) | `login_alert`    |
+| Sign-out / sign-out-all                 | Sign-out confirmation | `logout_alert`         |
+| Delete account (self or by admin)       | Account-deleted confirmation | `account_deleted` |
+| Forgot password                         | Reset OTP      | `password_reset`            |
+| Inspection scheduled                    | Inspection notice | `inspection_scheduled`   |
+| Maintenance logged                      | Maintenance notice | `maintenance_logged`    |
+
+Per-event sign-in/sign-out alerts can be turned off with
+`SECURITY_ALERTS_ENABLED=false` on the auth service (welcome and
+account-deleted always send).
+
+### Scheduled (cron) jobs — `management` service
+
+Two background jobs run on a schedule via `node-cron` (enable/disable with
+`CRON_ENABLED`):
+
+| Job                    | Default schedule | What it does                                                                 |
+| ---------------------- | ---------------- | ---------------------------------------------------------------------------- |
+| **Expiry scan**        | `0 8 * * *` (08:00 daily) | Flips lapsed extinguishers `active → expired`, then emails recipients an **expiry digest** (newly expired + expiring within `EXPIRY_ALERT_WINDOW_DAYS`, default 30). |
+| **Inspection reminder**| `0 7 * * *` (07:00 daily) | Emails recipients a digest of **overdue** and **upcoming** scheduled inspections (within `INSPECTION_REMINDER_WINDOW_DAYS`, default 3). |
+
+- **Recipients** are resolved from auth's internal directory API
+  (`GET /internal/users?roles=…`, internal-key only). By default
+  `ALERT_RECIPIENT_ROLES=admin,inspector`.
+- **Idempotent:** an extinguisher is alerted once when it crosses its expiry
+  date (the scan only reports units it just flipped), so re-runs don't re-spam.
+- The job summary (`{ expiringSoon, expired, recipients }` /
+  `{ upcoming, overdue, recipients }`) is logged on every run.
+
+**Run on demand** (internal-key guarded, not exposed through the gateway —
+handy for testing without waiting for the schedule):
+
+```bash
+curl -s -X POST http://localhost:8082/jobs/expiry-scan          -H "x-internal-key: dev-internal-key"
+curl -s -X POST http://localhost:8082/jobs/inspection-reminders -H "x-internal-key: dev-internal-key"
+```
+
+> With no `RESEND_API_KEY` the digests are recorded with status `skipped`; with a
+> key set they are actually sent (status `sent`, or `failed` if the provider
+> rejects the recipient).
+
+---
+
 ## Project structure
 
 ```
@@ -239,8 +304,7 @@ restful-template/
 │  ├─ auth/              authentication + user management   (DB: restful_auth)
 │  ├─ management/        extinguishers + inspections + maintenance (DB: restful_management)
 │  ├─ reporting/         reports + PDF/CSV export (no DB)
-│  ├─ notification/      email + audit log (DB: restful_notification)
-│  └─ api/               original single-service reference template (not run)
+│  └─ notification/      email + audit log (DB: restful_notification)
 ├─ scripts/
 │  ├─ setup-db.sql       create the per-service databases
 │  └─ backup-db.sh       pg_dump each database to ./backups
@@ -291,8 +355,8 @@ Shared by all services: `NODE_ENV`, `LOG_LEVEL`, `CORS_ORIGIN`,
 | Service       | Additional variables                                                                 |
 | ------------- | ------------------------------------------------------------------------------------ |
 | gateway       | `PORT=8080`, `AUTH_URL`, `MANAGEMENT_URL`, `REPORTING_URL`                             |
-| auth          | `PORT=8081`, `DATABASE_URL`, `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `DOMAIN?`, `NOTIFICATION_URL`, `APP_NAME` |
-| management    | `PORT=8082`, `DATABASE_URL`, `ACCESS_TOKEN_SECRET`, `NOTIFICATION_URL`                 |
+| auth          | `PORT=8081`, `DATABASE_URL`, `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `DOMAIN?`, `NOTIFICATION_URL`, `APP_NAME`, `SECURITY_ALERTS_ENABLED` |
+| management    | `PORT=8082`, `DATABASE_URL`, `ACCESS_TOKEN_SECRET`, `NOTIFICATION_URL`, `AUTH_URL`, `APP_NAME`, `CRON_ENABLED`, `EXPIRY_ALERT_WINDOW_DAYS`, `INSPECTION_REMINDER_WINDOW_DAYS`, `ALERT_RECIPIENT_ROLES`, `EXPIRY_CRON`, `INSPECTION_REMINDER_CRON` |
 | reporting     | `PORT=8083`, `ACCESS_TOKEN_SECRET`, `MANAGEMENT_URL`, `AUTH_URL`                       |
 | notification  | `PORT=8084`, `DATABASE_URL`, `RESEND_API_KEY?`, `EMAIL_FROM`, `APP_NAME`               |
 

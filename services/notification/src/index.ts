@@ -1,3 +1,5 @@
+// Notification microservice entry point — bootstraps the internal-key-guarded
+// notification API and the audit log persistence.
 import config from "@notification/config";
 import logger from "@notification/logger";
 import { openApiDocument } from "@notification/openapi";
