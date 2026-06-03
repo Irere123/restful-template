@@ -6,7 +6,8 @@ import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	MoreHorizontalIcon,
-} from "lucide-react";
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type * as React from "react";
 
 import { type Button, buttonVariants } from "@/components/ui/button";
@@ -90,7 +91,7 @@ export function PaginationPrevious({
 			size="default"
 			{...props}
 		>
-			<ChevronLeftIcon className="sm:-ms-1" />
+			<HugeiconsIcon icon={ChevronLeftIcon} className="sm:-ms-1" />
 			<span className="max-sm:hidden">Previous</span>
 		</PaginationLink>
 	);
@@ -108,7 +109,7 @@ export function PaginationNext({
 			{...props}
 		>
 			<span className="max-sm:hidden">Next</span>
-			<ChevronRightIcon className="sm:-me-1" />
+			<HugeiconsIcon icon={ChevronRightIcon} className="sm:-me-1" />
 		</PaginationLink>
 	);
 }
@@ -124,7 +125,7 @@ export function PaginationEllipsis({
 			data-slot="pagination-ellipsis"
 			{...props}
 		>
-			<MoreHorizontalIcon className="size-5 sm:size-4" />
+			<HugeiconsIcon icon={MoreHorizontalIcon} className="size-5 sm:size-4" />
 			<span className="sr-only">More pages</span>
 		</span>
 	);
