@@ -104,22 +104,26 @@ export default function InspectionsPage(): React.ReactElement {
 				title="Inspections"
 				description="Schedule and record extinguisher inspections."
 				actions={
-					<Button onClick={() => setScheduleOpen(true)}>
-						<PlusIcon />
-						Schedule inspection
-					</Button>
+					<div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+						<FilterSelect
+							value={status}
+							onChange={setStatus}
+							options={inspectionStatusOptions}
+							allLabel="All statuses"
+							ariaLabel="Filter by status"
+							size="default"
+							className="w-44"
+						/>
+						<Button
+							onClick={() => setScheduleOpen(true)}
+							className="shrink-0"
+						>
+							<PlusIcon />
+							Schedule inspection
+						</Button>
+					</div>
 				}
 			/>
-
-			<div className="flex items-center gap-2">
-				<FilterSelect
-					value={status}
-					onChange={setStatus}
-					options={inspectionStatusOptions}
-					allLabel="All statuses"
-					ariaLabel="Filter by status"
-				/>
-			</div>
 
 			<Card className="overflow-hidden rounded-lg">
 				<DataState

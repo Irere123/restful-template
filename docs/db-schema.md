@@ -14,6 +14,7 @@ the database level because users live in a different service's database.
 
 > The diagram below renders on GitHub, GitLab, Notion, Obsidian, VS Code (with a Mermaid
 > extension), and at <https://mermaid.live>. Copy the code block to reuse it elsewhere.
+> For dbdiagram.io, use the DBML source in [`db-schema.dbml`](./db-schema.dbml).
 
 ## ER Diagram
 

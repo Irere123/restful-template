@@ -50,7 +50,7 @@ export default function MaintenancePage(): React.ReactElement {
 				title="Maintenance"
 				description="A log of all maintenance carried out on your extinguishers."
 				actions={
-					<>
+					<div className="flex w-full items-center justify-end gap-2 sm:w-auto">
 						<FilterSelect
 							value={extinguisherId}
 							onChange={setExtinguisherId}
@@ -58,15 +58,18 @@ export default function MaintenancePage(): React.ReactElement {
 							allLabel="All extinguishers"
 							ariaLabel="Filter by extinguisher"
 							size="default"
-							className="min-w-56"
+							className="w-64 max-w-[min(16rem,calc(100vw-2rem))]"
 						/>
 						<RoleGate roles={["admin", "inspector"]}>
-							<Button onClick={() => setFormOpen(true)}>
+							<Button
+								onClick={() => setFormOpen(true)}
+								className="shrink-0"
+							>
 								<PlusIcon />
 								Log maintenance
 							</Button>
 						</RoleGate>
-					</>
+					</div>
 				}
 			/>
 

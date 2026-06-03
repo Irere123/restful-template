@@ -7,6 +7,7 @@ import {
 	PlusIcon,
 	SearchIcon,
 	Trash2Icon,
+	XIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -21,7 +22,11 @@ import { ExtinguisherStatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@/components/ui/input-group";
 import {
 	Menu,
 	MenuItem,
@@ -110,11 +115,14 @@ export default function ExtinguishersPage(): React.ReactElement {
 				}
 			/>
 
-			<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-				<div className="relative sm:max-w-xs">
-					<SearchIcon className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 size-4 text-muted-foreground" />
-					<Input
-						className="ps-9"
+			<div className="flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-xs/5 sm:flex-row sm:items-center">
+				<div className="min-w-0 flex-1 sm:max-w-md">
+					<InputGroup className="h-10 rounded-lg bg-background shadow-none sm:h-9">
+						<InputGroupAddon>
+							<SearchIcon className="text-muted-foreground" />
+						</InputGroupAddon>
+						<InputGroupInput
+							type="search"
 						placeholder="Search serial or location…"
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
