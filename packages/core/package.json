@@ -1,0 +1,41 @@
+{
+	"name": "@repo/core",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Shared building blocks for the Fire Extinguisher Management microservices (logging, errors, JWT auth, HTTP client, Express bootstrap).",
+	"exports": {
+		".": "./src/index.ts",
+		"./*": "./src/*.ts"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"compression": "^1.8.1",
+		"cookie-parser": "^1.4.7",
+		"cors": "^2.8.6",
+		"dotenv": "^17.4.2",
+		"express-rate-limit": "^8.5.2",
+		"helmet": "^8.2.0",
+		"jsonwebtoken": "^9.0.3",
+		"ksuid": "^3.0.0",
+		"swagger-ui-express": "^5.0.1",
+		"winston": "^3.19.0",
+		"zod": "^4.4.3"
+	},
+	"peerDependencies": {
+		"express": "^5.2.1"
+	},
+	"devDependencies": {
+		"@repo/tsconfig": "workspace:*",
+		"@types/compression": "^1.8.1",
+		"@types/cookie-parser": "^1.4.10",
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.6",
+		"@types/jsonwebtoken": "^9.0.10",
+		"@types/swagger-ui-express": "^4.1.8",
+		"express": "^5.2.1",
+		"typescript": "^6.0.3"
+	}
+}
