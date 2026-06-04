@@ -12,7 +12,7 @@ import { ApiError } from "@/lib/api/client";
 import { toast } from "@/lib/toast";
 import { registerFormSchema } from "@/lib/validation";
 
-const EMPTY = { name: "", email: "", password: "" };
+const EMPTY = { firstName: "", lastName: "", email: "", password: "" };
 
 export default function RegisterPage(): React.ReactElement {
 	const router = useRouter();
@@ -28,20 +28,12 @@ export default function RegisterPage(): React.ReactElement {
 
 	function handleSubmit(event: React.FormEvent): void {
 		event.preventDefault();
-		const parts = values.name.trim().split(/\s+/).filter(Boolean);
-		const formValues = {
-			firstName: parts[0] ?? "",
-			lastName: parts.slice(1).join(" "),
-			email: values.email,
-			password: values.password,
-		};
-		const parsed = registerFormSchema.safeParse(formValues);
+		const parsed = registerFormSchema.safeParse(values);
 		if (!parsed.success) {
 			const next: Record<string, string> = {};
 			for (const issue of parsed.error.issues) {
 				const field = String(issue.path[0]);
-				next[field === "firstName" || field === "lastName" ? "name" : field] =
-					field === "lastName" ? "Enter first and last name" : issue.message;
+				if (next[field] === undefined) next[field] = issue.message;
 			}
 			setErrors(next);
 			return;
@@ -62,13 +54,7 @@ export default function RegisterPage(): React.ReactElement {
 						return;
 					}
 					if (Object.keys(err.fieldErrors).length) {
-						setErrors({
-							...err.fieldErrors,
-							name:
-								err.fieldErrors.firstName ??
-								err.fieldErrors.lastName ??
-								err.fieldErrors.name,
-						});
+						setErrors(err.fieldErrors);
 						return;
 					}
 				}
@@ -89,18 +75,42 @@ export default function RegisterPage(): React.ReactElement {
 			</div>
 
 			<form className="mt-9 flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
-				<FormField label="Name" htmlFor="name" error={errors.name} required>
-					<Input
-						id="name"
-						autoComplete="name"
-						placeholder="Enter your name"
-						size="lg"
-						value={values.name}
-						onChange={(e) => update("name", e.target.value)}
-						aria-invalid={Boolean(errors.name)}
-						className="rounded-lg shadow-sm"
-					/>
-				</FormField>
+				<div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+					<FormField
+						label="First name"
+						htmlFor="firstName"
+						error={errors.firstName}
+						required
+					>
+						<Input
+							id="firstName"
+							autoComplete="given-name"
+							placeholder="Enter your first name"
+							size="lg"
+							value={values.firstName}
+							onChange={(e) => update("firstName", e.target.value)}
+							aria-invalid={Boolean(errors.firstName)}
+							className="rounded-lg shadow-sm"
+						/>
+					</FormField>
+					<FormField
+						label="Last name"
+						htmlFor="lastName"
+						error={errors.lastName}
+						required
+					>
+						<Input
+							id="lastName"
+							autoComplete="family-name"
+							placeholder="Enter your last name"
+							size="lg"
+							value={values.lastName}
+							onChange={(e) => update("lastName", e.target.value)}
+							aria-invalid={Boolean(errors.lastName)}
+							className="rounded-lg shadow-sm"
+						/>
+					</FormField>
+				</div>
 
 				<FormField label="Email" htmlFor="email" error={errors.email} required>
 					<Input
